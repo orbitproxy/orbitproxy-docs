@@ -1,0 +1,14 @@
+{
+  "title": "流量策略",
+  "defaultOpen": true,
+  "pages": [
+    "index",
+    "ip-access",
+    "basic-auth",
+    "api-key",
+    "http-header",
+    "custom-response",
+    "webhook-verify",
+    "mcp-access"
+  ]
+}

@@ -1,0 +1,39 @@
+---
+title: localhost接受 微信支付 等第三方 webhook 回调
+description: 通过orbitproxy 可以直接在本地开发机器上接收来自微信支付， 支付宝支付等第三方 webhook 回调。
+---
+
+webhook 需要一个可以公开访问的URL, 像微信支付这种对安全要求极高的场景会强制要求URL为HTTPS且不提供沙盒环境，这使得在本地开发对接微信支付变得棘手， 本地 dev server 在 localhost 无法正常接收微信支付回调，开发者也无法知道自身的代码写的是否有问题， 只能将代码发布并部署然后在线上环境或者测试环境进行调试 debug，遇到一次错误则重新改动重新部署，大大降低了开发效率
+
+orbitproxy 为你的本地服务器提供一个公开[HTTPS 云端点](/docs/gateway/endpoints)，让开发者在对接微信支付等第三方 webhook 场景下更加简单。
+
+## 工作原理
+
+1. 安装 [orbitproxy cli](/docs/client/cli)
+2. 本地启动你的API服务（如npm run dev / go run等)
+3. 认证 & 启动你的 orbitproxy cli
+4. 在 orbitproxy 控制中心创建HTTPS 云端点
+5. 向微信支付或者其他第三方 webhook 提供商注册 orbitproxy HTTPS URL
+6. 直接在本地计算机上接收 webhook 事件
+
+## 查看 webhook 调用上下文
+
+orbitproxy 强大的[可观测性](/docs/observe/access-logs)组件 可以让你实时查看每次微信支付或者其他第三方 webhook provider 的调用上下文，包括请求头， 请求体和你本地服务返回的响应，这会让你更加方便对齐你的 TypeScript 类型或者后端程序 payload 校验逻辑，而无需在本地终端打印可视化效果差强人意的日志。
+
+## 重放异常 webhook
+
+当本地处理 webhook 回调出现逻辑 bug并修复以后，无需重新走一遍微信实际支付或者webhook provider流程，你可以在 orbitproxy 可观测性组件中直接重放失败请求，这会使得开发者调试 webhook的效率大大提高。
+
+## 验证 webhook 签名
+
+像微信支付这类webhook provider 通常会使用密钥对每个请求进行加密，以便接收 webhook的程序验证这次请求的真实性（因为当你的回调地址公开在互联网上时，意味着任何人都可以发送请求，你必须得保证这次请求是真正的微信官方调用的），而在这种情况下，你需要在业务代码中对到来的请求进行签名验证，如果你有多个不同语言的业务接入了微信支付或者其他 webhook, 则你可能需要在多个业务中都集成一次验签流程， 而对多数初创团队而言，反复集成并不是最大的问题，而是验签流程是否真的做到了逻辑闭环没有漏洞
+
+orbitproxy的 [webhook 云端验证](/docs/policy/webhook-verify)提供了为国内常规webhook provider进行云端验签的能力，orbitproxy 会基于严谨安全的验签策略帮你确认请求是否来自预期的官方调用， 屏蔽恶意伪造请求， 将正确验签成功的请求转发到你的API服务， 这意味着你可以同时为你的多个服务提供统一的 webhook验证能力， 且你自身业务不需要写额外代码。
+
+## 下一步
+
+<div className="docs-more-list">
+
+- [了解 webhook 网关](/docs/gateway/webhook)
+
+</div>

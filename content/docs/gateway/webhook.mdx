@@ -1,0 +1,31 @@
+---
+title: Webhook 网关
+description: 用公网地址接收第三方回调，并在网关校验签名后再转到内网。
+---
+
+1. 为开发调试 localhost 本地环境提供公开地址以接受 微信支付 等第三方 webhook 回调， 提高开发效率和调试效率
+2. 集中管理来自 微信支付 和 支付宝支付 等第三方提供商的 webhook 验证和路由，以确保集成安全并消除重复实施。
+
+## 微信支付 / 支付宝 localhost 调试
+
+微信支付和支付宝只会向公网 HTTPS URL 投递回调。开发人员本机服务跑在 `127.0.0.1` 时，把 webhook 云端点指到这个端口，就能在<span className="docs-em">笔记本上接收、查看和重放支付回调</span>。
+
+<div className="docs-more-list">
+
+- [查看localhost接受微信支付等第三方 webhook 案例](/docs/cases/api/wechat-webhook)
+
+</div>
+
+## 生产环境webhook 全链路可视化日志 & 云端 webhook 验签
+
+无需在每个服务中单独实现 webhook 验证和路由逻辑，orbitproxy webhook 网关为来自 微信支付， 支付宝支付，飞书 和 GitHub 等第三方 webhook 提供商提供了一个<span className="docs-em">安全统一的入口点</span>。这种集中式方法可以验证 webhook 签名，防止篡改，并将经过身份验证的请求路由到生产环境中相应的内部服务， <span className="docs-em">避免出现在多个项目中反复书写 webhook 接入代码，同时避免了不同AI, 不同开发人员对验证逻辑的理解偏差造成的实际业务损失</span>， 同时 orbitproxy 会协助用户记录所有进入 webhook 网关的调用日志，日志全部以可视化ui的方式进入 orbitproxy 用户控制中心，降低维护成本
+
+<div className="docs-more-list">
+
+- [查看云端 webhook 验证案例](/docs/cases/webhook/cloud-verify)
+
+</div>
+
+## Webhook 网关工作原理
+
+<Diagram src="/diagrams/webhook-gateway.png" alt="Webhook 网关工作原理" />

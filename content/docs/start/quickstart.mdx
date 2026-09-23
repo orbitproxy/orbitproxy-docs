@@ -1,0 +1,120 @@
+---
+title: 把本地服务暴露到公网
+description: 安装客户端、完成认证并启动，再在控制台创建第一条 HTTP/TCP 云端点。
+---
+
+import { Step, Steps } from "fumadocs-ui/components/steps"
+import { Tab, Tabs } from "fumadocs-ui/components/tabs"
+
+登录控制台，打开 **安装指引**。下面四步和页面上的顺序一致：安装客户端 → 认证 → 启动 → 创建云端点。
+
+<Callout>
+  下载包和安装命令以控制台「安装指引」里当前显示的为准。文档里只写命令形状，不写本机地址。
+</Callout>
+
+<Steps>
+  <Step>
+    **安装 OrbitProxy 客户端**
+
+    客户端是独立可执行文件，不需要额外运行时。在控制台「安装指引」选择操作系统。
+
+    <Tabs items={["macOS", "Windows", "Linux"]}>
+      <Tab value="macOS">
+        按芯片选择 **Apple Silicon** 或 **Intel**，下载压缩包。不确定芯片时，打开「关于本机」。
+
+        在终端解压到 `~/.orbitproxy/bin`（不要用 sudo，也不要解压到 `/usr/local/bin`，否则在线更新没有写权限）：
+
+        ```bash
+        mkdir -p ~/.orbitproxy/bin && tar -xvzf ~/Downloads/orbitproxy.tar.gz -C ~/.orbitproxy/bin
+        ```
+      </Tab>
+      <Tab value="Windows">
+        下载 x64 压缩包。双击解压，再右键 `orbitproxy.exe` → 以管理员身份运行。
+      </Tab>
+      <Tab value="Linux">
+        在「安装指引」里复制一键安装命令。脚本会识别架构，并安装到 `~/.orbitproxy/bin/orbitproxy`。
+
+        也可以手动下载 x86_64 或 arm64 压缩包，再用和 macOS 相同的方式解压到 `~/.orbitproxy/bin`。
+      </Tab>
+    </Tabs>
+  </Step>
+
+  <Step>
+    **完成客户端认证**
+
+    Token 在控制台「安装指引」里选择。每台设备认证一次即可。不要用 sudo。
+
+    <Tabs items={["macOS / Linux", "Windows"]}>
+      <Tab value="macOS / Linux">
+        ```bash
+        cd ~/.orbitproxy/bin
+        ./orbitproxy authtoken <YOUR_AUTHTOKEN>
+        ```
+      </Tab>
+      <Tab value="Windows">
+        ```bat
+        .\orbitproxy.exe authtoken <YOUR_AUTHTOKEN>
+        ```
+      </Tab>
+    </Tabs>
+  </Step>
+
+  <Step>
+    **启动客户端**
+
+    前台启动会在关掉终端后停止。需要长期在线时，改用后台服务。
+
+    <Tabs items={["前台启动", "后台运行"]}>
+      <Tab value="前台启动">
+        macOS / Linux：
+
+        ```bash
+        cd ~/.orbitproxy/bin
+        ./orbitproxy run
+        ```
+
+        Windows：
+
+        ```bat
+        .\orbitproxy.exe run
+        ```
+
+        启动后到控制台 **客户端** 页，确认设备在线。
+      </Tab>
+      <Tab value="后台运行">
+        macOS / Linux（sudo 只用来注册系统服务，进程仍以当前用户跑，配置读 `~/.orbitproxy`）：
+
+        ```bash
+        sudo ~/.orbitproxy/bin/orbitproxy service install
+        ```
+
+        Windows 以管理员身份运行：
+
+        ```bat
+        .\orbitproxy.exe service install
+        ```
+      </Tab>
+    </Tabs>
+  </Step>
+
+  <Step>
+    **创建第一条 HTTP/TCP 云端点**
+
+    客户端在线后，在控制台点 **新增 HTTP/TCP 云端点**（安装指引第 4 步，或 **API 网关** 页）。
+
+    1. **协议**：选 HTTPS 或 TCP。推荐先选 HTTPS。
+    2. **公网地址**：选一条已有公网地址。如果提示没有可用地址，先到 **公网域名** 创建。
+    3. **带宽(Mbps)**：填写带宽。
+    4. **客户端**：选刚刚上线的那台设备。
+    5. **内网地址**：填 `host:port`，例如本机服务写成 `127.0.0.1:8080`。
+    6. 点 **创建云端点**。
+
+    创建成功后，用返回的公网主机和端口访问你的本地服务。
+  </Step>
+</Steps>
+
+## 接下来
+
+- 协议和入口说明：[API 网关](/docs/gateway/api)
+- 不想单独跑客户端：[SDK 接入](/docs/integrate/sdk)
+- 客户端命令：[CLI](/docs/client/cli)

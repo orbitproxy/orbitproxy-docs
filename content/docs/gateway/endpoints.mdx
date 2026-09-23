@@ -1,0 +1,19 @@
+---
+title: 云端点
+description: orbitproxy 提供的公网访问入口，创建、删除和配置可在控制面板集中管理。
+---
+
+云端点是orbitproxy 提供的公网访问入口，orbitproxy 提供安全域名来保证安全及合规性，其创建，删除和配置均可通过控制面板进行集中管理，不同网关提供的云端点配置能力会有部分差异，但整体你可以理解为云端点是你内网服务的入口门户， orbitproxy 云网关接受到的流量会根据你的云端点配置经过安全过滤以后流向你指定的内网服务
+
+## 目前orbitproxy 提供云端点类型分为如下几类
+
+1. **<span className="docs-em">API 云端点</span>**： 提供基础的HTTPS / TCP服务，常用于配置[localhost 或者内网站点公开分享](/docs/cases/api/localhost-api)、[内网 ERP / CMS / 运营后台](/docs/cases/api/intranet-erp-cms)或者常规TCP流量转发
+2. **<span className="docs-em">Webhook 云端点</span>**： 针对 webhook 场景设计的云端点类型， 相较于API云端点， Webhook云端点流量会经过[Webhook 网关](/docs/gateway/webhook)， 并具备独特的[云端 webhook验证](/docs/policy/webhook-verify)能力以及 [webhook 请求重放](/docs/cases/api/wechat-webhook)能力
+3. **<span className="docs-em">MCP云端点</span>**: MCP 网关专属端点类型，用于对接内网/localhost服务的MCP服务，其中特殊的[MCP Composer](/docs/cases/mcp/agent-ops) 云端点可以对多个内网服务器上的多个MCP服务进行聚合，无论背后多少个MCP服务，对外始终只需要配置一个端点，也只需要对一个端点进行统一的身份鉴权和限制管理，MCP云端点也带来独特的[MCP流量策略](/docs/policy)
+
+orbitproxy 对公网流量进行统一的安全巡检保护， 会拒绝常规恶意流量以及基于最新的TLS版本提供加密服务，但你仍可以配置以下策略来进一步提高云端点的安全性，特别是针对生产环境的TCP & MCP & Webhook而言:
+
+- **[IP访问控制](/docs/policy/ip-access)**:  限制云端点只能被指定IP访问（白名单）或者拒绝指定IP访问（黑名单）
+- **[API访问密钥](/docs/policy/api-key)**:  针对部分HTTPS API调用场景， 可以要求调用端提供常规的Authorization 令牌
+- **[BasicAuth](/docs/policy/basic-auth)**: 针对部分内网站点或者NAS访问场景， 必须输入指定的 username + password才能访问内容
+- **[MCP访问控制](/docs/policy/mcp-access)**： 针对MCP配置RBAC限制，只能指定的AI客户端允许调用内网MCP服务， 以及屏蔽某些高危敏感MCP调用（如删除表数据，删除库数据， 读取敏感文件内容）

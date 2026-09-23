@@ -1,0 +1,33 @@
+---
+title: 对外开放localhost本地开发环境API服务
+description: 无需任何部署即可与团队成员或外部协作用户共享本地开发环境 dev模式API, 进行快速联调和对接。
+---
+
+联调 API 时，通常需要在一个内网环境或者将本地代码部署到对外开放的VPC服务才能让其他服务可以访问， 前者限制了地域， 后者每改动一次代码就需要走一遍 deploy CICD。orbitproxy 允许你使用 [HTTPS 云端点](/docs/gateway/endpoints)公开本地 API 服务器，以便其他人可以立即与其交互，在此过程中，你无需准备任何域名或者云服务器。
+
+## 工作原理
+
+1. 安装 [orbitproxy cli](/docs/client/cli)
+2. 本地启动你的API服务（如npm run dev / go run等)
+3. 认证 & 启动你的 orbitproxy cli
+4. 在 orbitproxy 控制中心创建HTTPS 云端点
+5. 得到公网HTTPS安全地址并分享给其他人员
+
+将 HTTPS 转发 URL 分享给你的团队。他们可以像访问已部署的 API 一样，向你的本地 API 发出请求
+
+## 这样做的好处
+
+- 实时共享，快速联调: 无需推送到测试/预发布环境，即可快速让其他同学在任何位置任何环境调用你的本地API服务，联调遇到问题可快速本地修改并重新 build, node服务享受 hmr 热更新，几乎是秒级联调对接流程
+- 请求上下文全量观测: 外部协作用户调用你的每一次API请求，从请求PATH到参数到你服务器的响应都无需你额外进行 debug操作，也无需查看日志文件， orbitproxy [可观测性](/docs/observe/access-logs)全部帮你记录并提供可视化UI界面快速对账
+- API请求可重放: 当联调遇到问题时，orbitproxy 可帮你记录调用方的全部请求信息， 在你修复完成后无需反复要求调用方重试配合你测试，而是在 orbitproxy 通过API重放模拟一次一模一样的异常请求，降低对外沟通成本和提高调试效率
+
+## 接下来
+
+<div className="docs-more-list">
+
+- [公网访问内网ERP CMS或其他运营管理后台及各类 dashboard 服务](/docs/cases/api/intranet-erp-cms)
+- [为 webhook 端点开启访问日志以及执行 webhook 重放能力](/docs/cases/webhook/access-log-replay)
+- [使用 orbitproxy gateway 来替代 clickhouse, elk, loki等日志观测组件](/docs/cases/access-logs)
+- [了解 orbitproxy 流量策略是如何保证你内网服务的安全以及如何替代你的中间件工作](/docs/gateway/traffic-policy)
+
+</div>

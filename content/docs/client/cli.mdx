@@ -1,0 +1,32 @@
+---
+title: CLI
+description: orbitproxy 命令行参考。
+---
+
+## 安装
+
+```bash
+brew install orbitproxy
+```
+
+## 常用命令
+
+```bash
+orbitproxy http 5173
+```
+
+```bash
+orbitproxy tcp 3306
+```
+
+```bash
+orbitproxy authtoken <YOUR_TOKEN>
+```
+
+## 常用参数
+
+| 参数 | 说明 |
+| --- | --- |
+| `--domain` | 使用自定义域名，而不是默认 `*.orbitproxy.dev` |
+| `--region` | 边缘区域，例如 `ap-east` |
+| `--webhook` | 绑定一个 Webhook Provider 配置，启用验签 |

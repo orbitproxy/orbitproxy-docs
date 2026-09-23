@@ -1,0 +1,39 @@
+---
+title: API 网关
+description: 安全合规的云网关集群，把任何环境里的内网或 localhost 服务接到公网，并做策略、观测和流量治理。
+---
+
+orbitproxy 提供一套<span className="docs-em">安全合规的网关集群服务</span>， 该集群会接收来自互联网访问端的任何流量或者任意连接请求，在对应云网关进行域名匹配， 安全策略过滤以及负载均衡和路由解析以后，会将请求或者连接<span className="docs-em">安全的转发到用户的内网服务或者 localhost</span>, 在这其中<span className="docs-em">用户无需准备域名及服务器等相关资源</span>，只需专注业务，即可快速共享自身本地服务到公开网络
+
+与传统的反向代理不同， orbitproxy 不需要你有一个可达的IP地址， 也不要求你将服务暴露给 orbitproxy 云网关集群，取而代之的是， 你只需要在对应的内网环境或者 localhost 中安装 orbitproxy 客户端 (常规情况下可以理解为一个类似 claude code的小终端cmd), orbitproxy cli基于自签CA的TLS Over TCP 连接到 orbitproxy 云网关服务，当 orbitproxy 云网关收到流量或者请求时，会根据用户的配置将数据包通过这条加密TCP隧道转到到cli, cli再转发到你同一内网的任何服务。
+
+这意味着无论你的服务运行在什么网络什么位置， 无论是笔记本 还是 nas 或者其他本地数据中心亦或者内网VPC, 树莓派等，orbitproxy 都能提供对应支持
+
+## 目前 orbitproxy 提供 2 种形态的接入方式
+
+- **orbitproxy cli**: 官方提供的终端管理工具，其内部由cli wrapper + orbitproxy core组成
+- **orbitproxy core sdk**: 针对开发者更友好的 sdk集成， 可以在不需要安装客户端的情况下以 npm, go get的形态去将 orbitproxy 能力快速集成到自身的项目中
+
+## orbitproxy API 网关可以做到
+
+- **对任何环境中的内网服务提供安全合规的公开访问地址**
+- **对生产环境的所有页面和API快速提供观测能力**，收集访问服务的访客信息，流量消耗， 请求次数，以及每个请求的全量上下文等信息，相较于和传统网关需要繁琐的服务部署和API对接以及配置文件等高额理解成本，在 orbitproxy 中，这只需要在平台上打开一个开关！
+- **对你的任何服务进行流量编排和治理以及过滤**， orbitproxy 网关集群提供安全策略用于保护你的内网服务不受恶意请求攻击，以及提供对应的过滤策略允许你在请求的生命周期中对请求上下文进行编辑，同时提供负载均衡健康检查等常规运维能力
+- **无需在每个项目中都独立编码各类中间件**，通过 orbitproxy 云网关统一管理所有的服务策略
+
+你可以通过我们提供的各项案例或者文档教程来了解具体应该怎么使用API 网关，我们也推荐一些指引来帮你更加深入了解 orbitproxy API网关的强大:
+
+<div className="docs-more-list">
+
+- [对外开放localhost本地开发环境API服务](/docs/cases/api/localhost-api)
+- [公网访问内网ERP CMS或其他运营管理后台及各类 dashboard 服务](/docs/cases/api/intranet-erp-cms)
+- [为生产环境云端点快速开启维护模式](/docs/policy/custom-response)
+- [使用 orbitproxy gateway 来替代你的 nginx / caddy等老牌网关](/docs/gateway/api#与传统反向代理不同)
+- [使用 orbitproxy gateway 来替代 clickhouse, elk, loki等日志观测组件](/docs/observe/access-logs)
+- [Node / NextJS / Golang快速集成 orbitproxy sdk](/docs/integrate/sdk)
+
+</div>
+
+## API 网关工作原理
+
+<Diagram src="/diagrams/api-gateway.png" alt="API 网关工作原理" />

@@ -1,0 +1,5 @@
+{
+  "title": "可观测性",
+  "defaultOpen": true,
+  "pages": ["access-logs"]
+}
