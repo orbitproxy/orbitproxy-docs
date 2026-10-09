@@ -1,0 +1,103 @@
+---
+title: 使用orbitproxy作为你任何服务的流量入口
+---
+
+import { Step, Steps } from "fumadocs-ui/components/steps"
+
+了解如何使用云端点将orbitproxy 配置为API 网关， 并对流量进行完整观测。
+
+你已经开发出来了世界一流的站点或者API服务， 现在你想将其发布， 但是此时除了代码之外， 你需要考虑的问题很多, 比如服务器云主机，项目如何部署，HTTPS域名，证书自动管理， QPS攻击， DDOS攻击， 端口扫描等常规生产环境项目必须面临的调整，但除此之外，你或许还在寻求一些其他解决方案:
+
+- 对自身服务进行健康检查，负载均衡，快速熔断等
+- 可以对进入自身服务的所有请求进行观测和日志记录，能够在一个控制面板中追踪所有请求的详细请求内容和相应内容
+- 分析访问你站点的用户画像，了解用户访问细节，以及对恶意请求可以进行快速追踪和拦截
+
+## 在这个案例中你将了解到什么
+
+在本用例中，你将学习通过几个步骤将 orbitproxy 配置为你的API网关
+
+1. 如何为你的上游服务创建对应的云端点
+2. 如何使用 orbitproxy 流量策略来在不需要改动一行代码的情况下快速观测，路由你的流量
+
+## 你需要准备什么
+
+**域名**： 可以是orbitproxy提供的安全域名（这意味着你无需准备任何域名和证书，域名安全和证书续期都由 orbitproxy 帮你维护）, 也可以是你自身已经拥有的品牌域名
+
+你可以在orbitproxy控制中心的<a href="https://dashboard.app.orbitproxy.cloud/domains" target="_blank" rel="noopener noreferrer">公网域名</a>页面基于 orbitproxy 的系统域名创建子域名， 这个过程中你无需担心域名购买和备案问题
+
+<img src="/images/public-domains.jpg" alt="公网域名" className="docs-shot" />
+
+**一个已经认证完成的 orbitproxy 客户端**：你可以在 orbitproxy 的<a href="https://dashboard.app.orbitproxy.cloud/install" target="_blank" rel="noopener noreferrer">安装指引</a>界面快速安装符合你操作系统的客户端
+
+
+## 部署API演示服务（可选）
+
+如果你内网或者 localhost 已经有对应的内网服务在工作可以忽略这条， 但是如果你目前还没有对应的内网服务在工作，或者你只想快速验证一下 orbitproxy 的能力，以确保满足你的需求，那么你可以选择使用<a href="https://github.com/orbitproxy/api-demo" target="_blank" rel="noopener noreferrer">orbitproxy 演示服务</a>， 这个服务会启动一个简单的 http api在你本地 4000 端口， 你可以用他来完成接下里的流程
+
+## 1. 创建orbitproxy 云端点
+
+你的上游内网服务需要一种可以从 orbitproxy 接收流量的方式，你可以在orbitproxy 控制中心的<a href="https://dashboard.app.orbitproxy.cloud/api-gateway" target="_blank" rel="noopener noreferrer">HTTPS/TCP云端点</a>页面中建立这种连接
+
+<img src="/images/create-endpoint.jpg" alt="新增 HTTP/TCP 云端点" className="docs-shot" />
+
+至此，您的 API 网关已准备就绪，可以接收流量。请发送以下请求进行测试
+
+```bash
+curl -X GET https://$YOUR_DOMAIN
+```
+
+如果你用的是演示API， 你将会得到以下的响应
+
+```json
+{
+  "message": "Pong from orbitproxy!",
+  "user_agent": "curl",
+  "method": "GET",
+  "url": "/",
+  "status": 200
+}
+```
+
+## 2. 为你的云端点追加强大的可观测性
+
+你的API网关已经就绪，但是当服务暴露到公网去之后，你可能更关心谁有没有访问你，举几个例子:
+
+- 如果你是把自己的个人博客或者个人网站共享出去，你是不是会特别想知道到底谁在什么时候访问了你的什么内容， 点击率高不高
+- 如果你是把公司内网演示环境分享给了客户端， 那你会不会关心客户到底体验了你的哪些功能
+- 如果你是暴露出去了你的服务API,那么会不会想要知道谁调用了你的API呢
+- 最后如果有恶意攻击或者境外流量在扫描你的服务，你是否想要快速得到通知并做出相应手段呢
+
+在<a href="https://dashboard.app.orbitproxy.cloud/api-gateway" target="_blank" rel="noopener noreferrer">HTTPS/TCP云端点</a>页面中找到刚刚创建的云端点：
+
+1. 点击卡片右上角的Action 操作按钮
+2. 点击流量策略
+
+<img src="/images/traffic-policy-menu.jpg" alt="点击流量策略" className="docs-shot" />
+
+3. 然后点击对应的访问日志展开以后，点击添加规则
+
+<img src="/images/access-log-add-rule.jpg" alt="访问日志添加规则" className="docs-shot" />
+
+
+4. 在弹出的表单中填写你想要 orbitproxy 去追踪的采集级别， 如果想要事无巨细的全量采集，则可以将整个请求body和请求 header 都勾选
+
+<img src="/images/access-log-form.jpg" alt="添加访问日志" className="docs-shot" />
+
+此时点击保存，orbitproxy 将会协助你追踪进入你内网服务的每一个请求， 我们可以再尝试执行一次上面的CURL指令来像内网发起一次请求
+
+然后点击控制中心的<a href="https://dashboard.app.orbitproxy.cloud/observability/request-logs" target="_blank" rel="noopener noreferrer">云端点访问日志</a>，你将看到本次请求会 orbitproxy 追踪并展示在业务控制台中
+
+<img src="/images/access-logs-detail.jpg" alt="云端点访问日志" className="docs-shot" />
+
+点击详情， 你可以看到本次请求的完整上下文
+
+<img src="/images/access-log-detail.jpg" alt="访问日志详情" className="docs-shot" />
+
+
+
+## 接下来是什么？
+
+- 使用IP访问控制来管理能够访问你内网服务的IP
+- 使用 webhook verify来验证进入你内网的所有 webhook 回调
+- 使用用户密码机制来快速为你的服务提供加密访问能力
+- 了解 orbitproxy 可观测性全链路访问日志的更多用法

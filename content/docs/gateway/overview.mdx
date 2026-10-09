@@ -1,0 +1,61 @@
+---
+title: 概览
+---
+
+import {
+  EndpointConceptIcon,
+  ObservabilityConceptIcon,
+  TrafficPolicyConceptIcon,
+} from "@/components/docs-concept-icons"
+import { Rocket } from "@phosphor-icons/react/dist/ssr"
+
+连接你任何位置(本地 localhost, 企业内网环境， 云主机， Nas等)的HTTP / TCP 服务，并为其提供统一的认证鉴权， 访问控制，以及强大的可观测性
+
+orbitproxy API网关可以替代你的 nginx / caddy 成为你的云网关系统，让你再无需部署 clickhouse, elk等日志集群服务的情况下快速获得强大的流量观测能力， 也可以通过界面化的配置快速为你的产品服务叠加访问控制，认证鉴权，流量限速， 负载均衡等高阶扩展能力，降低团队运维门槛，让你的服务永不掉线, 保护你的服务不受DDOS, 端口扫描， 请求重放，中间人攻击等恶意攻击
+
+另一方面，无论你的前端项目和后端服务是工作在 localhost 笔记本电脑，亦或者云主机内网服务器，orbitproxy都能提供公网访问能力， 这使得用户可以轻松利用 orbitproxy API Gateway 做到:
+
+- localhost接收微信支付等第三方 webhook 回调
+- 无需公网域名 & 云主机服务器 快速发布上线产品
+- 企业内网演示环境快速分享给外网客户
+- 我的世界幻兽帕鲁等游戏联机
+- 其他任何只要支持网络套接字的HTTP TCP服务
+
+<div className="overview-grid">
+  <a className="overview-card" href="/docs/gateway/quickstart">
+    <Rocket className="overview-card-icon" weight="regular" aria-hidden="true" />
+    <h3>快速开始</h3>
+    <p>3 分钟快速发布本地 localhost 服务</p>
+  </a>
+</div>
+
+## API流量策略
+
+<div className="concept-list">
+  <a className="start-card" href="/docs/gateway/traffic-policy">
+    <TrafficPolicyConceptIcon className="start-card-icon" />
+    <span className="start-card-body">
+      <h3>API流量策略</h3>
+      <p>在请求进入内网之前过滤、鉴权、改写或直接拒绝。</p>
+    </span>
+  </a>
+</div>
+
+## 概念
+
+<div className="concept-list">
+  <a className="start-card" href="/docs/gateway/endpoints">
+    <EndpointConceptIcon className="start-card-icon" />
+    <span className="start-card-body">
+      <h3>云端点</h3>
+      <p>公网访问入口。创建、删除和配置都在控制台完成，流量按云端点配置转发到内网服务。</p>
+    </span>
+  </a>
+  <a className="start-card" href="/docs/gateway/observability">
+    <ObservabilityConceptIcon className="start-card-icon" />
+    <span className="start-card-body">
+      <h3>API可观测性</h3>
+      <p>查看每次请求的路径、状态和耗时，并可以重放已接收的请求。</p>
+    </span>
+  </a>
+</div>

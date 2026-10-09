@@ -1,5 +1,13 @@
 {
-  "title": "集成网关",
+  "title": "API 网关",
   "defaultOpen": true,
-  "pages": ["api", "mcp", "webhook", "endpoints", "traffic-policy", "observability"]
+  "pages": [
+    "overview",
+    "quickstart",
+    "webhook",
+    "endpoints",
+    "traffic-policy",
+    "observability",
+    "use-cases"
+  ]
 }

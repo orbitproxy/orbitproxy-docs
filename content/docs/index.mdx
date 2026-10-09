@@ -1,78 +1,83 @@
 ---
-title: 概述
-description: 让你轻松把应用、API 和服务放到公网上。
+title: 概览
 ---
 
-orbitproxy 是面向开发者和企业的基础设施，为你的内网ERP、本地API服务 和 MCP服务提供高安全性以及高性能的公开访问地址。无论服务是在内网环境还是 localhost本地笔记本，亦或者其他没有公开访问地址的VPC, orbitproxy都可以快速帮你打通公网和内网的连接。
+import {
+  Atom,
+  Binoculars,
+  Graph,
+  PlugsConnected,
+  Rocket,
+  TerminalWindow,
+} from "@phosphor-icons/react/dist/ssr"
+
+import { BilibiliPlayer } from "@/components/bilibili-player"
+
+orbitproxy 是面向开发者和企业的基础设施， 为你的应用提供企业级安全策略和流量编排能力，无论服务部署在何处或者处于什么位置，我们都能帮你快速发布到公开网络中，<span className="docs-em">你只需要关注自身业务， 域名， 运维发布， 观测， 安全， 告警等上层能力 orbitproxy 帮你搞定</span>。
+
+orbitproxy 在AI领域同样提供企业级MCP解决方案， 可以帮助团队将AI Agent连接到任何位置的MCP服务，这使得你可以利用Cursor, Trae, Claude等任何AI Agent去快速处理各个服务器环境中的各类问题，同时提供<span className="docs-em">对AI的所有行为进行追踪， 高危操作拦截，敏感操作告警等能力</span>。
+
+<BilibiliPlayer framed />
 
 ## 你可以用它做什么
 
-<div className="start-grid">
-  <a className="start-card" href="/docs/start/quickstart">
-    <img className="start-card-icon" src="/icons/nav-solution-local-expose.png" alt="" width={20} height={20} />
-    <span className="start-card-body">
-      <h3>把本地服务暴露到公网</h3>
-      <p>安装客户端，认证后启动，再在控制台把本机或内网端口映射成公网入口。</p>
-    </span>
+<div className="overview-grid">
+  <a className="overview-card" href="/docs/gateway/use-cases/traffic-entry">
+    <Rocket className="overview-card-icon" weight="regular" aria-hidden="true" />
+    <h3>把本地服务暴露到公网</h3>
+    <p>将内网和 localhost 上的 HTTP、TCP 服务发布到公网。</p>
   </a>
-  <a className="start-card" href="/docs/gateway/api">
-    <img className="start-card-icon" src="/icons/nav-gateway-api.png" alt="" width={20} height={20} />
-    <span className="start-card-body">
-      <h3>了解 API 网关</h3>
-      <p>把 HTTP / TCP 服务映射到公网域名和端口，上游不用改代码。</p>
-    </span>
+  <a className="overview-card" href="/docs/gateway/overview">
+    <Graph className="overview-card-icon" weight="regular" aria-hidden="true" />
+    <h3>API Gateway</h3>
+    <p>为你的任何服务提供企业级安全策略和负载策略，内网服务无需做任何代码变更即可快速集成 IP 访问控制，API Authorization，OAuth2.1，webhook 回调验证，流量限速等复杂流量处理能力，保证自身服务的高可用和高安全性。</p>
   </a>
-  <a className="start-card" href="/docs/gateway/mcp">
-    <img className="start-card-icon" src="/icons/nav-gateway-mcp.png" alt="" width={20} height={20} />
-    <span className="start-card-body">
-      <h3>了解 MCP 网关</h3>
-      <p>聚合内网 Tool，给 Agent 一个受控入口，敏感调用可拦截并按 run 审计。</p>
-    </span>
+  <a className="overview-card" href="/docs/mcp-gateway/overview">
+    <PlugsConnected className="overview-card-icon" weight="regular" aria-hidden="true" />
+    <h3>MCP 网关</h3>
+    <p>让本地 AI Agent 安全调用各云端环境的内网 MCP，并用 Composer 把一整套环境串成工作流；按身份源对 Agent 执行的 Tool 授权，并留下 AI 的完整调用可视化日志。</p>
   </a>
-  <a className="start-card" href="/docs/gateway/webhook">
-    <img className="start-card-icon" src="/icons/nav-gateway-webhook.png" alt="" width={20} height={20} />
-    <span className="start-card-body">
-      <h3>了解 Webhook 网关</h3>
-      <p>用公网域名接收第三方回调，并做验签与重放。</p>
-    </span>
-  </a>
-  <a className="start-card" href="/docs/gateway/observability">
-    <img className="start-card-icon" src="/icons/nav-solution-full-chain-access-logs.png" alt="" width={20} height={20} />
-    <span className="start-card-body">
-      <h3>可观测性</h3>
-      <p>查看入口上的请求路径、状态码、耗时，以及 AI 远程调用内网 MCP 的完整上下文，必要时导出 raw request。</p>
-    </span>
-  </a>
-  <a className="start-card" href="/docs/integrate/sdk">
-    <img className="start-card-icon" src="/icons/nav-integrate.png" alt="" width={20} height={20} />
-    <span className="start-card-body">
-      <h3>用 SDK 接入</h3>
-      <p>不想单独跑客户端时，在 Go / Next.js / Node.js 进程里直接连接控制面。</p>
-    </span>
+  <a className="overview-card" href="/docs/gateway/observability">
+    <Binoculars className="overview-card-icon" weight="regular" aria-hidden="true" />
+    <h3>全链路访问日志</h3>
+    <p>对进入你服务的所有请求进行追踪，提供完善的 HTTP 访问日志及回放日志，智能识别恶意攻击及异常请求并实时预警，在 AI 层面，可以为团队所有成员的 AI Agent 开启 MCP 调用追踪，AI 的每一次调用和行为都会被记录。</p>
   </a>
 </div>
 
 ## 你或许还想了解
 
-<div className="docs-more-list">
-
-- [localhost接受 微信支付 webhook 回调](/docs/cases/api/wechat-webhook)
-- [公网访问内网ERP CMS或其他运营管理后台及各类 dashboard 服务](/docs/cases/api/intranet-erp-cms)
-- [如何保证对外内网服务的安全性](/docs/policy)
-- [AI Agent访问localhost/内网MCP服务](/docs/cases/mcp/agent-ops)
-- [webhook 请求重放](/docs/gateway/webhook)
-- [本地个人博客 / 站点公开访问](/docs/cases/api/localhost-api)
-- [React / Vue等前端项目通过 npm / yarn等包管理器集成 orbitproxy](/docs/integrate/sdk)
-- [Golang 集成 orbitproxy sdk](/docs/integrate/sdk)
-
+<div className="overview-grid-3">
+  <a className="overview-card overview-pill" href="/docs/cases/api/wechat-webhook">
+    <h3>localhost接受 微信支付 webhook 回调</h3>
+  </a>
+  <a className="overview-card overview-pill" href="/docs/cases/api/intranet-erp-cms">
+    <h3>公网访问内网ERP CMS或其他运营管理后台及各类 dashboard 服务</h3>
+  </a>
+  <a className="overview-card overview-pill" href="/docs/policy">
+    <h3>如何保证对外内网服务的安全性</h3>
+  </a>
+  <a className="overview-card overview-pill" href="/docs/cases/mcp/agent-ops">
+    <h3>AI Agent访问localhost/内网MCP服务</h3>
+  </a>
+  <a className="overview-card overview-pill" href="/docs/cases/webhook/access-log-replay">
+    <h3>webhook 请求重放</h3>
+  </a>
+  <a className="overview-card overview-pill" href="/docs/cases/api/localhost-api">
+    <h3>本地个人博客 / 站点公开访问</h3>
+  </a>
 </div>
 
-## 如何找到我们
+## 集成
 
-<div className="docs-more-list">
-
-- bilibili
-- [微信公众号](https://work.weixin.qq.com/kfid/kfcbf9e2142defa76b1)
-- [在线客服](https://work.weixin.qq.com/kfid/kfcbf9e2142defa76b1)
-
+<div className="overview-grid">
+  <a className="overview-card" href="/docs/client/cli">
+    <TerminalWindow className="overview-card-icon" weight="regular" aria-hidden="true" />
+    <h3>客户端Cli</h3>
+    <p>orbitproxy 命令行参考。</p>
+  </a>
+  <a className="overview-card" href="/docs/integrate/sdk">
+    <Atom className="overview-card-icon" weight="regular" aria-hidden="true" />
+    <h3>SDK 接入</h3>
+    <p>在 Go 进程里直接建云端点。</p>
+  </a>
 </div>

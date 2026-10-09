@@ -1,9 +1,9 @@
 ---
-title: 流量策略
+title: 概览
 description: 基于界面化 UI 过滤、控制、管理和编排进入内网的每一个连接请求。
 ---
 
-orbitproxy 提供一套用于生产环境的流量策略体系来允许用户过滤， 控制， 管理和编排进入自身内网服务的每一个连接请求， ，整套策略配置体系基于界面化UI的形式，将复杂的配置文件语言置于系统底层服务，上手难度极低
+orbitproxy 提供一套用于生产环境的流量策略体系来允许用户过滤， 控制， 管理和编排进入自身内网服务的每一个连接请求， 整套策略配置体系基于界面化UI的形式，将复杂的配置文件语言置于系统底层服务，上手难度极低
 
 我们可以把流量的入和出看做是一个请求的完整生命周期， 当一个请求打到 orbitproxy 云网关时，这个请求的生命周期开始， 当请求从云网关到用户内网再回复响应， 最终云网关对外回复响应式， 这个请求的生命周期结束， 在生命周期中，我们在各个节点埋下Hook,  如Incomming Request(请求到达网关时)  ,Sending Response(请求返回响应时)，而流量策略就是工作在每个 hook 中的插件函数， 他深入到一次请求的每一个生命周期节点，来保证流量的安全和细粒度的控制，使用流量策略，你可以得到：
 
@@ -15,18 +15,59 @@ orbitproxy 提供一套用于生产环境的流量策略体系来允许用户过
 
 ## 对外开放流量策略列表
 
-| 能力 | 状态 | 做什么 |
-| --- | --- | --- |
-| [IP 访问控制](/docs/policy/ip-access) | 可用 | 按来源 IP / CIDR 建白名单或黑名单。白名单只放行名单内的调用方，黑名单拦掉已知恶意来源；未通过的请求在网关直接拒绝，不会打到内网 |
-| [BasicAuth 基础鉴权](/docs/policy/basic-auth) | 可用 | 要求调用方带上用户名和密码（浏览器会弹出原生鉴权框）。没带对凭证的请求在网关被拦下，适合演示环境、管理后台或 NAS 入口 |
-| [API 访问密钥](/docs/policy/api-key) | 可用 | 给联调方或下游服务签发可撤销的密钥。调用方必须在指定请求头（默认 `x-api-key`）里带上合法 Key，没带或带错的请求在网关被拦截 |
-| [添加/移除HTTP Header](/docs/policy/http-header) | 可用 | 在转发前给请求补标识，或在出网前拿掉不该暴露的头；也可以给响应追加 CORS 等字段。上游不用改代码 |
-| [自定义响应](/docs/policy/custom-response) | 可用 | 按规则在网关直接返回指定状态码和页面（例如系统维护中），或只改状态码并透传上游内容，内网服务不用改、也不必上线 |
-| 请求重写 | 可用 | 转发前改写路径、Host 或请求头，让公网看到的 URL 和内网真实路由脱钩，不必改上游代码就能对齐现有接口 |
-| [webhook回调验证](/docs/policy/webhook-verify) | 可用 | 只出现在 webhook 云端点。网关按身份源校验第三方回调签名，通过后再转发；没过的请求不会打到上游 |
-| [MCP 访问控制](/docs/policy/mcp-access) | 可用 | 只出现在 MCP 云端点。按身份源授权允许调用的 Tools，并可拦截敏感 SQL、文件操作或高危 Tool，未授权调用不会进入内网 |
-| JWT 鉴权 | 即将推出 | 校验请求里的 JWT 签名和声明（过期时间、受众等）。验签通过才转发到上游，伪造或过期的 Token 不会进入内网 |
-| OAuth 2.1 | 即将推出 | 按标准授权码 / 令牌流程校验调用方身份，通过后再放行到上游，适合需要对接第三方登录或企业身份源的接口 |
+<DocsTable>
+<table>
+  <thead>
+    <tr>
+      <th>能力</th>
+      <th>状态</th>
+      <th>做什么</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><a href="/docs/policy/ip-access-control">IP 访问控制</a></td>
+      <td>可用</td>
+      <td>按来源 IP / CIDR 建白名单或黑名单。白名单只放行名单内的调用方，黑名单拦掉已知恶意来源；未通过的请求在网关直接拒绝，不会打到内网</td>
+    </tr>
+    <tr>
+      <td><a href="/docs/policy/basic-auth">BasicAuth 基础鉴权</a></td>
+      <td>可用</td>
+      <td>要求调用方带上用户名和密码（浏览器会弹出原生鉴权框）。没带对凭证的请求在网关被拦下，适合演示环境、管理后台或 NAS 入口</td>
+    </tr>
+    <tr>
+      <td><a href="/docs/policy/api-key">API 访问密钥</a></td>
+      <td>可用</td>
+      <td>给联调方或下游服务签发可撤销的密钥。调用方必须在指定请求头（默认 `x-api-key`）里带上合法 Key，没带或带错的请求在网关被拦截</td>
+    </tr>
+    <tr>
+      <td><a href="/docs/policy/http-header">添加/移除HTTP Header</a></td>
+      <td>可用</td>
+      <td>在转发前给请求补标识，或在出网前拿掉不该暴露的头；也可以给响应追加 CORS 等字段。上游不用改代码</td>
+    </tr>
+    <tr>
+      <td><a href="/docs/policy/custom-response">自定义响应</a></td>
+      <td>可用</td>
+      <td>按规则在网关直接返回指定状态码和页面（例如系统维护中），或只改状态码并透传上游内容，内网服务不用改、也不必上线</td>
+    </tr>
+    <tr>
+      <td><a href="/docs/policy/access-log">访问日志</a></td>
+      <td>可用</td>
+      <td>记录经过网关的访问日志，便于排查调用和审计行为。</td>
+    </tr>
+    <tr>
+      <td>Host 改写</td>
+      <td>可用</td>
+      <td>转发前改写 Host，适配按 Host 路由或校验的上游服务。</td>
+    </tr>
+    <tr>
+      <td><a href="/docs/policy/webhook-verify">webhook回调验证</a></td>
+      <td>可用</td>
+      <td>只出现在 webhook 云端点。网关按身份源校验第三方回调签名，通过后再转发；没过的请求不会打到上游</td>
+    </tr>
+  </tbody>
+</table>
+</DocsTable>
 
 ## 使用场景
 
@@ -34,6 +75,5 @@ orbitproxy 提供一套用于生产环境的流量策略体系来允许用户过
 - 为生产环境云端点快速开启维护模式
 - 为云端点设置QPS限速来防止恶意请求刷API导致内网服务被击穿
 - 一键为云端点快速配置 CORS等常用请求头
-- [使用MCP访问控制来限制AI敏感操作](/docs/cases/mcp/agent-ops)（如拦截访问敏感文件， 拦截AI重启容器，删除/更新表数据等)
 - [使用 orbitproxy gateway 来替代 clickhouse, elk, loki等日志观测组件](/docs/cases/access-logs)
 - [为 webhook 端点开启访问日志以及执行 webhook 重放能力](/docs/cases/webhook/access-log-replay)

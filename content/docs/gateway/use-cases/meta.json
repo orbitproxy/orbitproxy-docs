@@ -1,0 +1,10 @@
+{
+  "title": "用例",
+  "pages": [
+    "traffic-entry",
+    "wechat-webhook",
+    "maintenance-mode",
+    "block-bots",
+    "compress-json"
+  ]
+}

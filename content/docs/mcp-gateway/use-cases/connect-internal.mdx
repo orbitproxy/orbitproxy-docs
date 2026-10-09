@@ -1,0 +1,110 @@
+---
+title: 连接你的内部Stdio MCP服务
+---
+
+了解如何在orbitproxy MCP Gateway 上快速注册你的单个内网MCP服务， 并让你的AI Agent 可以与其相连
+
+你现在有一个Mysql服务部署在你的云主机上， 你想让你的Cursor 或者Trae 等AI Agent 可以快速访问到它并能帮你做一些可控范围内的事，这会让你的工作效率大大提高，但是你现在会遇到一些问题:
+
+- 如果让AI直接通过TCP连接去连接数据库，你需要给AI Agent 完整的TCP公网可达地址，同时需要将你的数据库账号密码同步给他，这非常危险，你的数据库对公网开放以后，意味着任何人都可以扫描以及尝试攻击或者拦截， 同时数据库账号密码这类隐私密钥信息同步给了AI，则极容易在自身不知情的情况下造成密钥泄露， 甚至可能会被AI公司监守自盗（参考 2026 年 9 月的智谱事件）
+- 如果让AI直接SSH到服务器上去操作，你需要把你本机的 pubkey 和AI共享， 这意味着你再次把密钥泄露给了AI，另一方面，AI Agent 将得到对应ssh key 背后 user 的所有权限
+- AI的操作对你来说完全是黑盒， 你永远不知道AI到底在你的服务器上做了什么，扫描了什么，直到某天出现问题
+- 你无法限制AI的行为， 如数据库，AI会不会在思考的过程中执行Delete 操作， 你无法知道，同样更无法提前限制他执行Delete等危险操作
+- 你想到了MCP, 但是 mysql 的MCP Server 是Stdio 形态（即只能在本地命令行唤醒）， 这意味着你笔记本上的AI无法直接调用 mysql mcp
+
+## 在本用例中你将了解到什么
+
+1. 如何快速将Stdio 形态的Mysql MCP注册到orbitproxy MCP Gateway 中，并让AI Agent 对其进行访问
+2. 如何使用 orbitproxy 流量策略来在不需要改动一行代码的情况下快速监测AI的所有行为
+
+关于如何限制AI的行为或者对你的MCP端点提供企业级安全门阀，请参考 如何保护你的MCP端点
+
+## 你需要准备什么？
+
+**域名**： 可以是orbitproxy提供的安全域名（这意味着你无需准备任何域名和证书，域名安全和证书续期都由 orbitproxy 帮你维护）, 也可以是你自身已经拥有的品牌域名
+
+你可以在orbitproxy控制中心的<a href="https://dashboard.app.orbitproxy.cloud/domains" target="_blank" rel="noopener noreferrer">公网域名</a>页面基于 orbitproxy 的系统域名创建子域名， 这个过程中你无需担心域名购买和备案问题
+
+<img src="/images/public-domains.jpg" alt="公网域名" className="docs-shot" />
+
+**一个已经认证完成的 orbitproxy 客户端**：你可以在 orbitproxy 的<a href="https://dashboard.app.orbitproxy.cloud/install" target="_blank" rel="noopener noreferrer">安装指引</a>界面快速安装符合你操作系统的客户端
+
+**一个已经存活的 mysql 进程或者 mysql 容器服务**
+
+## Mysql MCP 服务安装及配置（可选）
+
+如果你的localhost或者内网服务已经部署了 <a href="https://github.com/benborla/mcp-server-mysql" target="_blank" rel="noopener noreferrer">benborla/mcp-server-mysql</a>  Mysql MCP 服务，则可以忽略，如果你还没有安装，可以使用如下指令进行快速安装
+
+```shell
+npm i -g @benborla29/mcp-server-mysql
+```
+
+## 1. 创建 orbitproxy MCP Connector
+
+在 orbitproxy 控制中心的<a href="https://dashboard.app.orbitproxy.cloud/mcp-gateway/connectors" target="_blank" rel="noopener noreferrer">MCP Connectors</a>页面点击新增MCP Connector 以向 orbitproxy MCP Gateway 注册你的内部Mysql Stdio MCP服务， 这能确保后续能够正常接收你的Cursor 或者其他AI Agent 的调用请求
+
+<img src="/images/mcp-connectors.jpg" alt="MCP Connectors" className="docs-shot" />
+
+在弹出的表单中选择好对应的内容
+
+<img src="/images/create-mcp-connector.jpg" alt="新增 MCP Connector" className="docs-shot" />
+
+## 2. 完成预检工作
+
+点击创建以后，如果是 mysql mcp ，你会看到一个异常是 mysql mcp 环境变量缺失，这是因为 mysql mcp 要和 mysql进行交互，必须要有一个可访问的账户密码， 但你无需担心这个账号密码的安全性遭到任何挑战， orbitproxy 强制要求所有MCP敏感密钥信息以环境变量的形式存在于你自身的服务器上，只会做临时加载和key读取， 这使得你的所有敏感密钥永远都只会在你自身的内网环境中出现， 无法被AI读取， orbitproxy 也不会上报
+
+<Alert>
+orbitproxy 客户端代码始终开源，你可在我们的官方 github仓库中查看 orbitproxy 客户端以及 orbitproxy-sdk的完整源代码，以二次确保 orbitproxy 不会上报你的任何敏感信息
+</Alert>
+
+<img src="/images/mcp-connector-preflight.jpg" alt="MCP Connector 预检" className="docs-shot" />
+
+复制对应的环境文件构建指令，来到你部署MCP服务和orbitproxy 客户端的服务器或者笔记本上，通过终端执行对应的指令，但记得更改红框里框出来的值为你打算提供给MCP的真实数据
+
+<img src="/images/mcp-mysql-env.jpg" alt="填写 Mysql MCP 环境变量" className="docs-shot" />
+
+更改完成以后回到页面中点击立即重试，此时会看到预检成功
+
+<img src="/images/mcp-connector-preflight-success.jpg" alt="预检成功" className="docs-shot" />
+
+## 3. 配置客户端所属环境Env Key
+
+当你的AI Agent 上有多个不同环境不同用途的MCP时，为了避免AI Agent 混淆其用途，或消耗过多 token 去猜测MCP服务用途， 我们建议用户为每个客户端编辑其对应的AI 专用Env Key字段
+
+来到<a href="https://dashboard.app.orbitproxy.cloud/mcp-gateway/connectors" target="_blank" rel="noopener noreferrer">客户端管理</a>页面，点击对应客户端的操作按钮，然后点击编辑操作
+
+<img src="/images/client-edit.jpg" alt="编辑客户端" className="docs-shot" />
+
+在打开的表单中可以填写对应客户端所处环境的EnvKey, 我们建议填写的案例如下， 以方便AI Agent 可以快速识别MCP服务背后的属主环境
+
+```shell
+# 如果是本机笔记本
+ENV_KEY=localMacbook
+ENV_KEY=localWindows
+# 如果是企业某个环境
+ENV_KEY=optest115  # op标识orbitproxy，可以指代你企业的品牌，test指环境，类似的可以用 prod, pre等短标识， 最后 115 可以是具体的机器 ip 后缀，尽可能唯一就没问题
+```
+
+serverkey 的配置主要是让AI尽可能精准的分析出MCP的环境， 只要大致贴近即可，即便配置错误，也不会影响MCP实际的工作能力
+
+在这个 case 中，我们会填为templocalMac, 表示这是一个本地临时测试 的 mac 机器， serverkey 对应的是AI能读懂的机器标识，而非MCP服务标识
+
+<img src="/images/client-env-key.jpg" alt="编辑客户端" className="docs-shot" />
+
+
+## 4.配置MCP服务到你的AI Agent
+
+预检完成以后， 你的MCP服务就已经成功注册到orbitproxy 的MCP网关中，此时已经可以做到和你的AI Agent 或vibe coding 工具相连， 我们点击对应MCP服务的操作栏 然后点击对应的 连接我的Agent
+
+<img src="/images/mcp-connector-connect-agent.jpg" alt="连接我的AI Agent" className="docs-shot" />
+
+在打开的AI Agent列表中选择适合自己的AI 工具， 点击 安装指引， 然后根据指引进行安装， 部分Agent（如Cursor） 支持快速为本机安装，点击可以一键配置
+
+在这个案例中，AI Agent 为Cursor， 所以我们点击Cursor的一键安装， 会直接进入 cursor 配置界面
+
+<img src="/images/cursor-install-mcp.jpg" alt="Install MCP server" className="docs-shot" />
+
+此时整个MCP服务已经在Cursor 集成完毕， 我们可以打开对话框尝试让AI Agent 帮我们执行一行 sql
+
+<img src="/images/cursor-mysql-query.jpg" alt="Cursor 执行 SQL" className="docs-shot" />
+

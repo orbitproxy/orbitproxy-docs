@@ -1,17 +1,57 @@
 ---
-title: IP访问控制
-description: 按来源 IP 允许或拒绝访问云端点。
+title: IP访问控制或基本身份验证
 ---
 
-只让可信网络打到公网入口，或拦掉已知恶意来源。规则挂在云端点上，上游不用改。
+某些服务需要支持具有不同类型凭据的不同用户组，内部团队可能使用静态IP组，而外部用户可能使用基本身份验证，借助 orbitproxy 的流量策略，你可以通过配置来完成这两种类型的验证规则，而无需对你的服务进行任何代码更改
 
-## 在控制台怎么配
+本示例将引导你了解如何快速为云端点配置IP访问控制和基本身份验证，在完成示例以后， 你的云端点将允许受信任来源IP地址或者具有有效身份验证凭据的请求，而不满足条件的请求将被直接拒绝
 
-1. 打开对应 API、Webhook 或 MCP 云端点，切到 **流量策略**
-2. 展开 **IP访问控制**，点 **添加规则**
-3. 填 **规则名称**
-4. **策略模式** 选「拒绝名单（黑名单）」或「允许名单（白名单）」
-5. 在 **IP / CIDR 列表** 里加地址，例如 `192.168.1.0/24` 或单 IP `10.0.0.1`
-6. 保存
+## 你需要准备什么
 
-白名单只放行列表里的来源，其余全部拒绝。黑名单相反：列表里的来源被拒绝，其余放行。
+- **一个正在工作的HTTPS云端点**： 可以通过[云端点](/docs/gateway/endpoints)文档理解相关概念，并完成[使用orbitproxy作为你任何服务的流量入口](/docs/gateway/use-cases/traffic-entry)来学会如何构建第一个云端点
+- **一个已经认证完成的 orbitproxy 客户端**：你可以在 orbitproxy 的<a href="https://dashboard.app.orbitproxy.cloud/install" target="_blank" rel="noopener noreferrer">安装指引</a>界面快速安装符合你操作系统的客户端
+
+## 通过流量策略来追加IP访问控制
+
+在云端点流量策略配置面板中点击**IP访问控制**，点击**添加规则**， 在表单中填写多个IP或者多个IP段
+
+#### 配置机器黑名单
+
+<img src="/images/config-ip-policy.png" alt="HTTP/TCP 云端点页面" className="docs-shot" />
+
+国内环境下你可以通过访问https://ip.3322.net/ 得到你机器的公网IP或者直接在终端 执行 curl https://ip.3322.net/ 获取公网IP
+
+配置完成后点击确认， 我们再尝试用被拒绝IP访问对应的云端点时会被拒绝，使用其他IP访问则正常不受影响
+
+<img src="/images/ip-policy-refuse.png" alt="HTTP/TCP 云端点页面" className="docs-shot" />
+
+在使用黑名单模式时，我们可以在开启云端点访问日志以后，在云端点访问日志控制面板中快速拉黑某个非法IP
+
+<img src="/images/observability-block-ip.png" alt="HTTP/TCP 云端点页面" className="docs-shot" />
+
+#### 配置机器白名单
+
+<Alert>
+在一些企业内部系统中，我们往往更青睐白名单，因为白名单可以做到除了某几台固定机器（如员工家中 Macbook、公司局域网段，以及给客户演示时配置的客户公网 IP），其他机器都不能访问
+</Alert>
+
+同样在云端点流量策略配置面板中点击**IP访问控制**，点击**添加规则**， 在表单中填写多个IP或者多个IP段， 同时将对应的访问控制策略配置为白名单模式
+
+<img src="/images/config-ip-policy-white.png" alt="HTTP/TCP 云端点页面" className="docs-shot" />
+
+点击确定以后，用非202.103.169.47的IP访问对应云端点时会被直接拒绝， 只有202.103.169.47这台机器可以访问对应的云端点
+
+
+## 使用基本用户密码验证来保证你的特殊服务不被他人访问
+
+当传输一些敏感文件或者私有站点时，你可能不希望任何人都能够打开他， 而你对IP访问控制也没那么擅长， orbitproxy 提供一种更简单的方式来协助你完成对站点的隐私保护， 且无需你修改任何内网服务代码
+
+在云端点流量策略配置面板中点击**BasicAuth基础鉴权*，点击**添加规则**， 在表单中填写多个可以访问该云端点的用户和密码
+
+<img src="/images/basic-auth.png" alt="HTTP/TCP 云端点页面" className="docs-shot" />
+
+点击确定以后，我们打开对应的站点，你会发现需要提供对应的用户名和密码才能访问, **这在分享一些不带登录能力的文件或者预览隐私站点时非常有用**
+
+<img src="/images/basic-auth-enter-password.png" alt="HTTP/TCP 云端点页面" className="docs-shot" />
+
+密码正常输入成功以后，你就可以访问到真正的内容

@@ -9,11 +9,13 @@
     "postinstall": "fumadocs-mdx"
   },
   "dependencies": {
+    "@phosphor-icons/react": "^2.1.10",
     "fumadocs-core": "^16.1.15",
     "fumadocs-mdx": "^14.2.0",
     "fumadocs-ui": "^16.1.15",
     "lucide-react": "^0.544.0",
     "next": "^16.1.7",
+    "qrcode.react": "^4.2.0",
     "react": "^19.2.3",
     "react-dom": "^19.2.3"
   },

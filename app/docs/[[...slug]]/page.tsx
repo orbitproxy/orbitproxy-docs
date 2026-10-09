@@ -3,7 +3,19 @@ import type { Metadata } from "next"
 import { notFound } from "next/navigation"
 
 import { CopyPage } from "@/components/copy-page"
+import { DocsJsonLd } from "@/components/docs-json-ld"
 import { getMDXComponents } from "@/components/mdx"
+import {
+  SITE_DESCRIPTION,
+  SITE_LOCALE,
+  SITE_NAME,
+  SITE_OG_IMAGE,
+  SITE_TITLE,
+  isPlaceholderPage,
+  lastModifiedOf,
+  seoDescriptionOf,
+  seoTitleOf,
+} from "@/lib/seo"
 import { source } from "@/lib/source"
 
 export default async function Page(props: PageProps<"/docs/[[...slug]]">) {
@@ -12,10 +24,18 @@ export default async function Page(props: PageProps<"/docs/[[...slug]]">) {
   if (!page) notFound()
 
   const MDX = page.data.body
-  const toc = page.data.toc ?? []
+  const toc = params.slug?.length ? (page.data.toc ?? []) : []
 
   return (
     <div className="docs-main-inner">
+      {isPlaceholderPage(page.path) ? null : (
+        <DocsJsonLd
+          title={page.data.title}
+          description={seoDescriptionOf(page.url, page.data.description)}
+          url={page.url}
+          modified={lastModifiedOf(page.path)}
+        />
+      )}
       <article className="docs-article">
         <header className="mb-6">
           <div className="docs-title-row">
@@ -58,8 +78,29 @@ export async function generateMetadata(
   const page = source.getPage(params.slug)
   if (!page) notFound()
 
+  const isHome = !params.slug?.length
+  const title = isHome ? SITE_TITLE : seoTitleOf(page.data.title, page.url)
+  const description = isHome ? SITE_DESCRIPTION : seoDescriptionOf(page.url, page.data.description)
+
   return {
-    title: page.data.title,
-    description: page.data.description,
+    title: isHome ? { absolute: SITE_TITLE } : title,
+    description,
+    alternates: { canonical: page.url },
+    robots: isPlaceholderPage(page.path) ? { index: false, follow: true } : undefined,
+    openGraph: {
+      type: isHome ? "website" : "article",
+      siteName: SITE_NAME,
+      locale: SITE_LOCALE,
+      url: page.url,
+      title,
+      description,
+      images: [SITE_OG_IMAGE],
+    },
+    twitter: {
+      card: "summary",
+      title,
+      description,
+      images: [SITE_OG_IMAGE],
+    },
   }
 }

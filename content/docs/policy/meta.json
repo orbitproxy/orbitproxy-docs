@@ -4,10 +4,12 @@
   "pages": [
     "index",
     "ip-access",
+    "ip-access-control",
     "basic-auth",
     "api-key",
     "http-header",
     "custom-response",
+    "access-log",
     "webhook-verify",
     "mcp-access"
   ]

@@ -1,0 +1,154 @@
+---
+title: MCP Composer
+description: 把多个 MCP Connector 收成一个公网入口。
+---
+
+MCP Composer 把多台机器上的 MCP Connector 收成一条云端点。AI Agent 只配置这一个地址。鉴权、限制和观测都挂在这条 Composer 上，不用对每个内网 MCP 单独暴露公网。
+
+## 工作方式
+
+Composer 是 MCP Gateway 中的一种云端点。它拥有独立的 HTTPS 公网地址，本身不运行任何 MCP 服务，而是在这个入口背后聚合若干个成员 [MCP Connector](/docs/mcp-gateway/connector)：
+
+1. AI Agent 只连接 Composer 的公网地址。
+2. Composer 汇总所有成员 Connector 的 Tools，并以各自的 Server Key 作为前缀，对外呈现为统一的 Tools 列表。
+3. Agent 调用某个 Tool 时，Composer 根据前缀将请求路由到对应的 Connector，再经由该 Connector 所属的客户端到达内网中的 MCP 服务。
+
+成员 Connector 可以分布在不同的客户端和机器上，并且既可以是[内部 Connector](/docs/mcp-gateway/connector)，也可以是已经拥有公网地址的公开 Connector。对 Agent 而言，一整套环境里的 MCP 服务只需要配置一次。
+
+## 适用场景
+
+- **环境级聚合**：把同一个环境中的数据库、缓存、容器管理、系统日志等 MCP 服务收成一个入口，让 Agent 在整个环境的上下文中完成排查与运维。
+- **集中的安全边界**：身份校验、Tool 授权和敏感操作拦截只需在 Composer 上配置一次，成员 Connector 无需各自暴露公网地址。
+- **统一的审计视图**：所有经过 Composer 的 Tool 调用都记录在同一个入口的访问日志中。
+
+如果你只需要把单个 MCP 服务暴露给 Agent，直接为 Connector 分配公网地址即可，不必创建 Composer。
+
+## 创建 Composer
+
+在控制台的 MCP Composer 页面点击 **新增 MCP Composer**，配置以下内容：
+
+<DocsTable>
+<table>
+  <thead>
+    <tr>
+      <th>配置项</th>
+      <th>说明</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>显示名称</td>
+      <td>控制台展示用，可使用中文，例如「生产环境」。未填写时使用 Server Key</td>
+    </tr>
+    <tr>
+      <td>Server Key</td>
+      <td>写入 AI Agent 配置文件 <code>mcpServers</code> 中的键名，例如 <code>prod</code>。规则与 Connector 的 Server Key 一致：统一转为小写，以字母开头，只能包含字母、数字和连字符</td>
+    </tr>
+    <tr>
+      <td>公网地址</td>
+      <td>Composer 对外的 HTTPS 地址，从已有的公网地址中选择</td>
+    </tr>
+    <tr>
+      <td>关联 MCP Connectors</td>
+      <td>从已创建的 Connector 中多选要聚合的成员。需要先在 MCP Connector 页面创建 Connector</td>
+    </tr>
+  </tbody>
+</table>
+</DocsTable>
+
+创建之后，可以通过 **编辑** 调整带宽（默认 1 Mbps）和请求体上限，也可以修改显示名称、Server Key 和成员列表。
+
+### 成员约束
+
+- 同一个 Composer 内，成员 Connector 的 Server Key 必须唯一。出现重复时，创建和添加都会被拒绝，提示冲突的 Server Key。
+- 每个 Composer 可以关联的 Connector 数量受当前套餐限制，超出时无法保存。
+- 一个 Connector 可以同时属于多个 Composer。
+
+## 管理成员 Connector
+
+Composer 详情页提供四个页签：
+
+<DocsTable>
+<table>
+  <thead>
+    <tr>
+      <th>页签</th>
+      <th>用途</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>成员 Connector</td>
+      <td>查看成员列表，添加新成员，或移除已有成员。每个成员支持查看详情和访问日志，也可以从这里移除</td>
+    </tr>
+    <tr>
+      <td>连接我的AI Agent</td>
+      <td>选择你使用的 AI 工具，按指引将 Composer 的地址写入配置</td>
+    </tr>
+    <tr>
+      <td>流量策略</td>
+      <td>配置 Composer 入口的访问策略</td>
+    </tr>
+    <tr>
+      <td>详情</td>
+      <td>查看 Composer ID、Server Key、公网访问地址、带宽、请求体上限、状态和创建、更新时间</td>
+    </tr>
+  </tbody>
+</table>
+</DocsTable>
+
+### 添加与移除成员
+
+点击 **添加 Connector** 可以将更多 Connector 加入 Composer，已经是成员的 Connector 不会再出现在候选列表中。
+
+移除成员时，**只会解除它与当前 Composer 的关联，不会删除 Connector 本身**，该 Connector 也不会失去它在其他 Composer 或自有公网地址上的访问能力。
+
+## 保护 Composer 入口
+
+<Alert type="warning">
+Composer 的公网入口与公开 Connector 一样，默认不校验接入身份。创建之后请立即配置访问控制，避免地址泄露后被任意 Agent 调用。
+</Alert>
+
+Composer 同样支持在 **流量策略** 页签中挂载以下策略，它们作用于整个 Composer 入口：
+
+- [API 访问密钥](/docs/policy/api-key)：要求调用方携带密钥，没带或带错的请求在网关被拦截。
+- [MCP 访问控制](/docs/policy/mcp-access)：按身份源授权可调用的 Tools，并拦截敏感 SQL、文件操作等高危调用。
+- [IP访问控制](/docs/policy/ip-access-control)：只允许可信来源访问这个入口。
+- [访问日志](/docs/policy/access-log)：记录每一次经过 Composer 的 Tool 调用，用于审计和排查。
+
+## 与公开 Connector 的区别
+
+<DocsTable>
+<table>
+  <thead>
+    <tr>
+      <th>对比项</th>
+      <th>公开 Connector</th>
+      <th>MCP Composer</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>聚合范围</td>
+      <td>单个 MCP 服务</td>
+      <td>多个 Connector，可跨客户端、跨机器</td>
+    </tr>
+    <tr>
+      <td>公网地址</td>
+      <td>每个 Connector 一个</td>
+      <td>每个 Composer 一个，成员无需各自暴露</td>
+    </tr>
+    <tr>
+      <td>策略配置位置</td>
+      <td>Connector 的流量策略</td>
+      <td>Composer 的流量策略</td>
+    </tr>
+  </tbody>
+</table>
+</DocsTable>
+
+两个入口互相独立：公开 Connector 加入 Composer 之后，Agent 既可以通过 Connector 自己的地址访问，也可以通过 Composer 访问。
+
+## 删除 Composer
+
+删除 Composer 会释放它占用的公网地址，Agent 将无法再通过该地址访问。成员 Connector 全部保留，不受影响。此操作不可撤销。

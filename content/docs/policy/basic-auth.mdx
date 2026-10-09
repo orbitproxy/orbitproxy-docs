@@ -1,9 +1,50 @@
 ---
 title: BasicAuth 基础鉴权
-description: 要求请求携带用户名和密码，未通过校验的流量会被拦截。
+description: 在云端点上要求 HTTP Basic Auth，凭证不对的请求返回 401。
 ---
 
-给演示环境、管理后台或临时入口加一层浏览器原生弹窗鉴权。没带对凭证的请求不会打到上游。
+在云端点上要求 HTTP Basic Auth。用户名和密码正确的请求会转到上游，其余请求直接返回 `401 Unauthorized`，不会打到内网。
+
+## 配置参考
+
+这条策略在请求到达网关时执行。
+
+### 配置字段
+
+<DocsTable>
+<table>
+  <thead>
+    <tr>
+      <th>字段</th>
+      <th>说明</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>规则名称</td>
+      <td>这条规则在控制台里的名字</td>
+    </tr>
+    <tr>
+      <td>Credentials</td>
+      <td>允许通过的账号，格式是 <code>username:password</code>，一行一组。密码长度 8–128 个字符</td>
+    </tr>
+  </tbody>
+</table>
+</DocsTable>
+
+## 行为
+
+网关按 [RFC 7235](https://datatracker.ietf.org/doc/html/rfc7235) 校验 HTTP Basic Authentication。请求里的账号和已配置的 `username:password` 对得上，就继续往后转发，最后到达上游；对不上，请求在网关结束，返回 `401 Unauthorized`。
+
+### 其他限制
+
+密码最短 8 个字符，最长 128 个字符。`username:password` 里如果出现多个冒号，第一个冒号是用户名和密码的分界，后面的内容都算进密码。
+
+### 校验过程
+
+- 请求必须带 `Authorization` 头，形式是 `Authorization: Basic <credentials>`。`<credentials>` 是 `用户名:密码` 的 Base64。
+- 校验通过后，请求继续转发到上游。
+- 校验失败返回 `401`。浏览器会弹出原生用户名和密码框，让调用方重新提交。
 
 ## 在控制台怎么配
 
@@ -13,4 +54,15 @@ description: 要求请求携带用户名和密码，未通过校验的流量会�
 4. 在 **Credentials** 里按 `username:password` 添加账号，一行一组
 5. 保存
 
-密码长度需为 8–128 个字符。调用方用 HTTP Basic 提交这对用户名和密码。
+## 示例
+
+先把 `username:password` 做 Base64。`user:password1` 编码后是 `dXNlcjpwYXNzd29yZDE=`。
+
+```bash
+curl https://你的云端点/ \
+  -H "Authorization: Basic dXNlcjpwYXNzd29yZDE="
+```
+
+凭证正确时，网关把请求转到上游，并返回上游的响应。
+
+不带 `Authorization` 头，或用户名密码不对时，会收到 `401 Unauthorized`，浏览器会弹出登录框。

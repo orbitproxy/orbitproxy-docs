@@ -11,13 +11,10 @@ export function baseOptions(): BaseLayoutProps {
       transparentMode: "none",
     },
     links: [
-      { text: "快速入门", url: "/docs" },
-      { text: "用户使用场景", url: "/docs/cases/api/localhost-api" },
-      { text: "可观测性", url: "/docs/observe/access-logs" },
-      { text: "流量策略", url: "/docs/policy" },
-      { text: "orbitproxy 客户端", url: "/docs/client/cli" },
-      { text: "集成 orbitproxy", url: "/docs/integrate/sdk" },
-      { text: "私有化部署", url: "/docs/deploy/overview" },
+      { text: "概览", url: "/docs" },
+      { text: "API Gateway", url: "/docs/gateway/overview" },
+      { text: "MCP Gateway", url: "/docs/mcp-gateway/overview" },
+      { text: "客户端", url: "/docs/client/cli" },
       {
         type: "custom",
         secondary: true,

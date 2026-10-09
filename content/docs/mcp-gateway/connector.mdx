@@ -1,0 +1,135 @@
+---
+title: MCP Connector
+---
+
+MCP Connector 是AI Agent连接不同环境MCP(如Stdio内网MCP, StreamableHTTP MCP, Remote MCP)的最小桥梁， MCP Connector将各个环境的MCP服务注册到orbitproxy MCP Gateway中
+
+## 内部Connector
+
+内部 Connector 是 Connector 的默认形态。MCP 服务注册到 MCP Gateway 之后，不分配任何公网地址，既不监听公网端口，也不对外暴露访问入口。在控制台创建 Connector 时，**Connector 类型** 选择「内部端点」即为这种形态。
+
+内部 Connector 不能被 AI Agent 直接访问，只能由 [MCP Composer](/docs/mcp-gateway/composer) 聚合后统一对外提供服务。适合数据库、系统日志、容器管理这类不应该拥有独立公网入口的 MCP 服务：它们只在你的内网里被注册，对外只有 Composer 这一个受控入口。
+
+### 创建时需要配置的内容
+
+<DocsTable>
+<table>
+  <thead>
+    <tr>
+      <th>配置项</th>
+      <th>说明</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>客户端</td>
+      <td>MCP 服务实际运行所在的 orbitproxy 客户端。Connector 通过这个客户端与 MCP Gateway 建立连接，没有可选客户端时需要先接入客户端</td>
+    </tr>
+    <tr>
+      <td>MCP 服务</td>
+      <td>从预置列表中选择，或选择「自定义」。内部 Connector 支持一次勾选多个 MCP 服务批量创建；同一客户端上已经创建过的预置服务不能重复创建</td>
+    </tr>
+    <tr>
+      <td>交付方式</td>
+      <td>自定义 MCP 需要选择。<strong>Forward（HTTP MCP）</strong>：MCP 服务已经以 HTTP 形态运行，网关把请求转发到它的内网地址。<strong>Exec（stdio 命令）</strong>：MCP 服务是命令行形态，由客户端按命令唤起，并通过标准输入输出与网关交互</td>
+    </tr>
+    <tr>
+      <td>内网地址 / 内网路径</td>
+      <td>Forward 形态填写。内网地址格式为 <code>host:port</code>，自定义 MCP 还需要填写内网路径，例如 <code>/mcp</code></td>
+    </tr>
+    <tr>
+      <td>交互命令</td>
+      <td>Exec 形态填写。一整行命令，空格分隔，首段是可执行文件，其后是参数，例如 <code>npx --no-install @benborla29/mcp-server-mysql</code></td>
+    </tr>
+    <tr>
+      <td>数据库文件路径</td>
+      <td>SQLite 类预置服务填写，需要是客户端机器上 <code>.db</code> 文件的绝对路径</td>
+    </tr>
+    <tr>
+      <td>MCP 形态</td>
+      <td>自定义 MCP 需要选择，决定后续 MCP 访问控制能拦截的粒度：<strong>仅 tool 白名单</strong>不拦截 SQL 或文件操作；<strong>SQL</strong>可按语句类别拦截；<strong>文件系统</strong>可按操作和路径拦截</td>
+    </tr>
+  </tbody>
+</table>
+</DocsTable>
+
+### Server Key
+
+每个 Connector 都有一个 Server Key，它是写入 AI Agent 配置文件 `mcpServers` 中的键名，例如 `prodmysql`。预置服务使用该服务自带的标识；自定义 MCP 使用所属客户端的 Env Key。
+
+Server Key 会统一转成小写，并且必须以字母开头，只能包含字母、数字和连字符。自定义 MCP 的 Server Key 来自客户端的 Env Key，如果 Env Key 含有下划线等其他字符，创建会失败。Env Key 的设置方式见[连接你的内部Stdio MCP服务](/docs/mcp-gateway/use-cases/connect-internal)。
+
+### 预检与 Tools 发现
+
+创建之后，Connector 会进入预检，校验这个 MCP 服务在客户端上的运行环境是否完整。如果服务依赖账号密码这类敏感配置，预检会提示环境变量缺失。orbitproxy 要求所有敏感密钥以环境变量的形式保存在你自己的机器上，只在运行时临时读取，不会上报，也不会暴露给 AI Agent。
+
+在 Connector 详情的 Tools 区域可以随时重新执行两项操作：
+
+- **预检**：重新校验运行环境，适合修改了环境变量或升级了 MCP 服务之后使用。
+- **重新发现**：从上游重新拉取 Tools 列表。当上游返回的 Tools 过多时，列表会被截断，并在详情中标注。
+
+### 删除
+
+删除 Connector 会同时删除它的公网入口（如有），并将它从所属的 Composer 中移除。如果 Connector 对应的预置服务已经被删除，详情的类型旁会显示「预设已删除」标记。
+
+## 公开Connector
+
+公开 Connector 在内部 Connector 的基础上，为这个 MCP 服务分配一个持久唯一的 HTTPS 公网地址，AI Agent 可以直接通过这个地址访问它。在控制台创建时，**Connector 类型** 选择「云端点」。
+
+公开 Connector 本身就是一个云端点，可以像其他云端点一样挂载[流量策略](/docs/gateway/traffic-policy)，在请求到达内网之前完成身份校验、访问限制和高危 Tool 拦截，同时保留完整的[访问日志](/docs/mcp-gateway/observability)。
+
+### 创建公开 Connector
+
+创建公开 Connector 除了上述内部 Connector 的配置项之外，还需要配置公网入口：
+
+<DocsTable>
+<table>
+  <thead>
+    <tr>
+      <th>配置项</th>
+      <th>说明</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>公网地址</td>
+      <td>从已有的 HTTPS 公网地址中选择。可以是 orbitproxy 提供的系统域名子域名，也可以是你自己的品牌域名</td>
+    </tr>
+    <tr>
+      <td>带宽（Mbps）</td>
+      <td>这个公网入口的带宽上限，默认 1 Mbps</td>
+    </tr>
+    <tr>
+      <td>请求体上限</td>
+      <td>这个公网入口允许的单次请求体最大体积</td>
+    </tr>
+  </tbody>
+</table>
+</DocsTable>
+
+一次只能创建一个公开 Connector，不支持批量创建。
+
+### 为已有 Connector 分配公网地址
+
+内部 Connector 可以随时升级为公开 Connector。在 Connector 的 **公网地址** 页签中点击 **分配公网地址**，填写公网地址、带宽和请求体上限即可。反过来，点击 **移除公网入口** 会释放这个公网地址，已经接入的 AI Agent 将无法再通过该地址访问此 Connector，Connector 自身退回内部形态，不会被删除。
+
+### 保护公网入口
+
+<Alert type="warning">
+公网入口默认不校验接入身份。地址一旦泄露，任何 Agent 都能调用该 Connector。请先配置 API 访问密钥，再配置 MCP 访问控制关联权限。
+</Alert>
+
+建议在分配公网地址之后立即完成以下配置，都可以在 Connector 的 **流量策略** 页签里完成：
+
+- [API 访问密钥](/docs/policy/api-key)：要求调用方携带密钥，没带或带错的请求在网关被拦截。
+- [MCP 访问控制](/docs/policy/mcp-access)：按身份源授权可调用的 Tools，并拦截敏感 SQL、文件操作等高危调用。
+- [IP访问控制](/docs/policy/ip-access-control)：只允许可信来源访问这个入口。
+- [访问日志](/docs/policy/access-log)：记录每一次 Tool 调用，用于审计和排查。
+
+### 连接 AI Agent
+
+分配公网地址之后，Connector 的操作栏会出现 **连接我的AI Agent**。选择你使用的 AI 工具并按安装指引完成配置，部分工具（如 Cursor）支持一键配置到本机。完整的操作流程见[连接你的内部Stdio MCP服务](/docs/mcp-gateway/use-cases/connect-internal)。
+
+### 与 Composer 的关系
+
+公开 Connector 同样可以加入 [MCP Composer](/docs/mcp-gateway/composer)。两种访问路径互相独立：Agent 既可以通过 Connector 自己的公网地址直接访问，也可以通过 Composer 的统一入口访问，两个入口的流量策略各自配置。

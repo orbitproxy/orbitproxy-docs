@@ -1,0 +1,169 @@
+---
+title: MCP可观测性
+description: 记录、监控和调试 AI对MCP端点的每一次访问
+---
+
+在用户主动配置对应的可观测性规则以后，所有通过网关发出的 MCP 请求都会自动记录。采集级别见[可观测性](/docs/gateway/observability)。
+
+## 什么内容将会被记录
+
+每条访问日志详情包含：
+
+<DocsTable>
+<table>
+  <thead>
+    <tr>
+      <th>字段</th>
+      <th>说明</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Tool</td>
+      <td>调用了哪个工具</td>
+    </tr>
+    <tr>
+      <td>MCP Method</td>
+      <td>MCP 方法，例如 tools/call</td>
+    </tr>
+    <tr>
+      <td>请求体</td>
+      <td>「请求」页签里的请求内容</td>
+    </tr>
+    <tr>
+      <td>响应体</td>
+      <td>「响应」页签里的响应内容</td>
+    </tr>
+    <tr>
+      <td>访问密钥</td>
+      <td>详情里的访问密钥</td>
+    </tr>
+    <tr>
+      <td>访问来源指纹</td>
+      <td>详情里的访问来源指纹</td>
+    </tr>
+    <tr>
+      <td>时间</td>
+      <td>同一行里的请求时间</td>
+    </tr>
+    <tr>
+      <td>耗时 / 流量</td>
+      <td>耗时，以及 in、out 字节数</td>
+    </tr>
+    <tr>
+      <td>结果</td>
+      <td>成功、客户端错误、上游错误、策略拒绝或后端不可达</td>
+    </tr>
+    <tr>
+      <td>云端点</td>
+      <td>打到哪个 Endpoint</td>
+    </tr>
+    <tr>
+      <td>JA4</td>
+      <td>详情里的 JA4</td>
+    </tr>
+    <tr>
+      <td>信号</td>
+      <td>详情里的信号</td>
+    </tr>
+  </tbody>
+</table>
+</DocsTable>
+
+请求体和响应体是否写入，取决于访问日志的采集级别。完整请求体这一级会记下请求体和响应体，每次响应体最多采集 64KB。
+
+## 查看日志
+
+在控制中心打开云端点访问日志。条件过滤可以按这些项筛选：
+
+- 时间范围
+- 客户端 IP
+- 状态
+- 结果
+- 错误码
+- 风险级别
+- 信号码
+- 地区范围
+- 国家
+- 省 / 市
+
+点开一条记录会打开「访问日志详情」。「请求」页签有请求头和请求体，「响应」页签有响应头和响应体，另外还有「IP 信息」。
+
+如一次AI Agent对 mysql 的调用会帮你记录下如下请求日志以及响应日志
+
+<DocsCodeTabs tabs={[{ label: "请求体" }, { label: "响应体" }]}>
+
+```json
+{
+  "method": "tools/call",
+  "params": {
+    "name": "mysql_query",
+    "arguments": {
+      "sql": "SELECT id, name FROM users ORDER BY id"
+    },
+    "_meta": {
+      "progressToken": 2
+    }
+  },
+  "jsonrpc": "2.0",
+  "id": 2
+}
+```
+
+```json
+{
+  "id": 2,
+  "jsonrpc": "2.0",
+  "result": {
+    "content": [
+      {
+        "text": [
+          {
+            "id": "usr_01",
+            "name": "alice"
+          },
+          {
+            "id": "usr_02",
+            "name": "bob"
+          },
+          {
+            "id": "usr_03",
+            "name": "cara"
+          }
+        ],
+        "type": "text"
+      },
+      {
+        "text": "Query execution time: 4.18 ms",
+        "type": "text"
+      }
+    ],
+    "isError": false
+  }
+}
+```
+
+</DocsCodeTabs>
+
+而在控制中心中，你会看到更加已读的日志面板
+
+<img src="/images/mcp-access-log-panel.jpg" alt="访问日志详情" className="docs-shot" />
+
+## 使用统计
+
+访问趋势和访客分布在[可观测性](/docs/gateway/observability)里：
+
+- 账户和云端点的流量趋势
+- 访客来源次数和地域统计
+
+## 排查
+
+- 结果不是成功时，看详情里的「结果」和「响应」页签里的响应体
+- 调用参数不对时，看「请求」页签里的请求体
+- 调用慢时，看「耗时 / 流量」
+
+## 高危请求
+
+条件过滤里可以把风险级别设为高危。列表会标出危险请求，并可以拦截此 IP。
+
+<img src="/images/mcp-risk-access-logs.jpg" alt="云端点访问日志" className="docs-shot" />

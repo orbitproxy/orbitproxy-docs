@@ -7,111 +7,126 @@ import { usePathname } from "next/navigation"
 import type { Folder, Node, Root } from "fumadocs-core/page-tree"
 import { useSearchContext } from "fumadocs-ui/contexts/search"
 
-const PRIMARY_NAV = [
+type NavItem = {
+  href: string
+  label: string
+  match: (pathname: string) => boolean
+  select: (tree: Root) => Node[]
+}
+
+const PRIMARY_NAV: NavItem[] = [
   {
     href: "/docs",
-    label: "快速入门",
-    match: (pathname: string) =>
-      pathname === "/docs" ||
-      pathname.startsWith("/docs/start") ||
-      (pathname.startsWith("/docs/gateway") && !isTrafficPolicyPath(pathname)),
-    select: (tree: Root) => {
-      const nodes: Node[] = []
-      const gateways: Node[] = []
-      for (const node of tree.children) {
-        if (node.type === "page" && node.url === "/docs") nodes.push(node)
-        if (node.type === "folder" && folderCovers(node, "/docs/gateway")) {
-          for (const child of node.children) {
-            if (child.type === "page" && isTrafficPolicyPath(child.url)) continue
-            gateways.push(child)
-          }
-        }
-      }
-      if (gateways.length > 0) {
-        nodes.push({ type: "separator", name: "概念入门" })
-        nodes.push(...gateways)
-      }
-      return nodes
-    },
+    label: "概览",
+    match: (pathname) => pathname === "/docs" || pathname === "/docs/start/how-it-works",
+    select: () => [],
   },
   {
-    href: "/docs/cases/api/localhost-api",
-    label: "用户使用场景",
-    match: (pathname: string) => pathname.startsWith("/docs/cases"),
-    select: (tree: Root) => flattenPages(folderChildren(tree, "/docs/cases")),
+    href: "/docs/gateway/overview",
+    label: "API Gateway",
+    match: (pathname) =>
+      (covers(pathname, "/docs/gateway") && pathname !== "/docs/gateway/traffic-policy") ||
+      pathname === "/docs/policy/ip-access",
+    select: (tree) => [
+      ...group(tree, "入门指引", [
+        "/docs/gateway/overview",
+        "/docs/gateway/quickstart",
+        "/docs/gateway/endpoints",
+      ]),
+      ...group(tree, "使用用例", [
+        "/docs/gateway/use-cases/traffic-entry",
+        "/docs/gateway/use-cases/wechat-webhook",
+        "/docs/policy/ip-access",
+        "/docs/gateway/use-cases/maintenance-mode",
+        "/docs/gateway/use-cases/block-bots",
+        "/docs/gateway/use-cases/compress-json",
+      ]),
+    ],
   },
   {
-    href: "/docs/observe/access-logs",
-    label: "可观测性",
-    match: (pathname: string) => pathname.startsWith("/docs/observe"),
-    select: (tree: Root) => folderChildren(tree, "/docs/observe"),
+    href: "/docs/mcp-gateway/overview",
+    label: "MCP Gateway",
+    match: (pathname) => covers(pathname, "/docs/mcp-gateway"),
+    select: (tree) => [
+      ...group(tree, "入门指引", [
+        "/docs/mcp-gateway/overview",
+        "/docs/mcp-gateway/quickstart",
+        "/docs/mcp-gateway/connector",
+        "/docs/mcp-gateway/composer",
+      ]),
+      ...group(tree, "用例", [
+        "/docs/mcp-gateway/use-cases/connect-internal",
+        "/docs/mcp-gateway/use-cases/composer",
+      ]),
+      ...namedGroup(tree, "概念", [
+        ["MCP可观测性", "/docs/mcp-gateway/observability"],
+      ]),
+    ],
   },
   {
-    href: "/docs/policy",
+    href: "/docs/gateway/traffic-policy",
     label: "流量策略",
-    match: (pathname: string) => isTrafficPolicyPath(pathname),
-    select: (tree: Root) => folderWithIndex(tree, "/docs/policy"),
+    match: (pathname) =>
+      pathname === "/docs/gateway/traffic-policy" ||
+      (covers(pathname, "/docs/policy") && pathname !== "/docs/policy/ip-access"),
+    select: (tree) =>
+      pages(tree, [
+        "/docs/gateway/traffic-policy",
+        "/docs/policy/ip-access-control",
+        "/docs/policy/basic-auth",
+        "/docs/policy/api-key",
+        "/docs/policy/http-header",
+        "/docs/policy/custom-response",
+        "/docs/policy/access-log",
+        "/docs/policy/webhook-verify",
+        "/docs/policy/mcp-access",
+      ]),
   },
   {
     href: "/docs/client/cli",
-    label: "orbitproxy 客户端",
-    match: (pathname: string) => pathname.startsWith("/docs/client"),
-    select: (tree: Root) => folderChildren(tree, "/docs/client"),
+    label: "客户端",
+    match: (pathname) => covers(pathname, "/docs/client"),
+    select: (tree) => pages(tree, ["/docs/client/cli"]),
   },
-  {
-    href: "/docs/integrate/sdk",
-    label: "集成 orbitproxy",
-    match: (pathname: string) => pathname.startsWith("/docs/integrate"),
-    select: (tree: Root) => folderChildren(tree, "/docs/integrate"),
-  },
-  {
-    href: "/docs/deploy/overview",
-    label: "私有化部署",
-    match: (pathname: string) => pathname.startsWith("/docs/deploy"),
-    select: (tree: Root) => folderChildren(tree, "/docs/deploy"),
-  },
-] as const
+]
 
-function isTrafficPolicyPath(pathname: string) {
-  return (
-    pathname === "/docs/policy" ||
-    pathname.startsWith("/docs/policy/") ||
-    pathname === "/docs/gateway/traffic" ||
-    pathname.startsWith("/docs/gateway/traffic/")
-  )
+function covers(pathname: string, prefix: string) {
+  return pathname === prefix || pathname.startsWith(`${prefix}/`)
 }
 
-function folderCovers(folder: Folder, prefix: string): boolean {
-  if (folder.index?.url.startsWith(prefix)) return true
-  return folder.children.some((child) => {
-    if (child.type === "page") return child.url.startsWith(prefix)
-    if (child.type === "folder") return folderCovers(child, prefix)
-    return false
+function indexPages(nodes: Node[], into = new Map<string, Extract<Node, { type: "page" }>>()) {
+  for (const node of nodes) {
+    if (node.type === "page") into.set(node.url, node)
+    if (node.type === "folder") {
+      if (node.index) into.set(node.index.url, node.index)
+      indexPages(node.children, into)
+    }
+  }
+  return into
+}
+
+function pages(tree: Root, urls: string[]): Node[] {
+  const indexed = indexPages(tree.children)
+  return urls.flatMap((url) => {
+    const page = indexed.get(url)
+    return page ? [page] : []
   })
 }
 
-function folderChildren(tree: Root, prefix: string): Node[] {
-  const folder = tree.children.find(
-    (node): node is Folder => node.type === "folder" && folderCovers(node, prefix),
-  )
-  return folder?.children ?? []
+function group(tree: Root, name: string, urls: string[]): Node[] {
+  const items = pages(tree, urls)
+  if (items.length === 0) return []
+  return [{ type: "separator", name }, ...items]
 }
 
-function flattenPages(nodes: Node[]): Node[] {
-  const pages: Node[] = []
-  for (const node of nodes) {
-    if (node.type === "page") pages.push(node)
-    if (node.type === "folder") pages.push(...flattenPages(folderChildNodes(node)))
-  }
-  return pages
-}
-
-function folderWithIndex(tree: Root, prefix: string): Node[] {
-  const folder = tree.children.find(
-    (node): node is Folder => node.type === "folder" && folderCovers(node, prefix),
-  )
-  if (!folder) return []
-  return folder.index ? [folder.index, ...folder.children] : folder.children
+function namedGroup(tree: Root, name: string, items: [string, string][]): Node[] {
+  const indexed = indexPages(tree.children)
+  const nodes = items.flatMap(([label, url]) => {
+    const page = indexed.get(url)
+    return page ? [{ ...page, name: label }] : []
+  })
+  if (nodes.length === 0) return []
+  return [{ type: "separator", name }, ...nodes]
 }
 
 export function DocsShell({
@@ -131,7 +146,7 @@ export function DocsShell({
       <header className="docs-header">
         <div className="docs-header-inner">
         <div className="docs-header-bar">
-          <Link href="/docs" className="docs-logo" aria-label="OrbitProxy Docs Home">
+          <Link href="/docs" className="docs-logo" aria-label="orbitproxy docs home">
             <Image
               src="/logo.svg"
               alt="orbitproxy"
@@ -144,7 +159,20 @@ export function DocsShell({
             <span className="docs-logo-word">文档</span>
           </Link>
           <div className="docs-header-actions">
-            <a href="http://localhost:3000" className="docs-btn docs-btn-primary">
+            <a
+              href="https://orbitproxy.cc"
+              className="docs-btn docs-btn-ghost"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              官网
+            </a>
+            <a
+              href="http://localhost:3000"
+              className="docs-btn docs-btn-primary"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
               进入控制中心
             </a>
           </div>
@@ -164,11 +192,13 @@ export function DocsShell({
       </header>
 
       <div className="docs-frame">
-        <aside className="docs-sidebar" aria-label="二级导航">
-          <div className="docs-sidebar-tree">
-            <NavTree nodes={secondary} pathname={pathname} />
-          </div>
-        </aside>
+        {secondary.length > 0 ? (
+          <aside className="docs-sidebar" aria-label="二级导航">
+            <div className="docs-sidebar-tree">
+              <NavTree nodes={secondary} pathname={pathname} />
+            </div>
+          </aside>
+        ) : null}
         <div className="docs-main">{children}</div>
       </div>
 

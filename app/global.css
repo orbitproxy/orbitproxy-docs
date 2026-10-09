@@ -94,14 +94,15 @@
   --container-4xl: 56rem;
   --breakpoint-2xl: 96rem;
 
-  --cds-font-sans: var(--font-mm-euclid), "MMEuclidLatin", "PingFang SC",
-    "Hiragino Sans GB", "Microsoft YaHei", system-ui, -apple-system,
-    BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --cds-font-sans: var(--font-mm-euclid), "MMEuclidLatin", "PingFang SC", "Hiragino Sans GB",
+    "Microsoft YaHei", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif,
+    "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+  /* orbitproxy-website/app/globals.css --font-logo */
+  --font-logo: var(--font-alata), "Alata", ui-sans-serif, sans-serif;
   --cds-font-voice: var(--cds-font-sans);
   --font-ui-serif: var(--cds-font-sans);
-  --font-geist-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
-    "Liberation Mono", "Courier New", monospace;
-  --font-code: var(--font-geist-mono);
+  --font-code: var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo, Monaco,
+    Consolas, "Liberation Mono", "Courier New", monospace;
 }
 
 @theme {
@@ -527,30 +528,37 @@ body {
   padding-bottom: 0.5rem;
 }
 
-/* .font-title: 1.75rem / 1.3 / font-ui-serif / weight 500 */
+/* ngrok.com/docs/gateway/overview h1, measured 2026-10-06: 36px / 40px / 600 / -0.9px / rgb(23, 24, 28) */
 .docs-title {
   margin: 0;
-  color: var(--cds-text-primary);
-  font-family: var(--font-ui-serif);
-  font-size: 1.75rem;
-  font-weight: 500;
-  line-height: 1.3;
+  color: rgb(23, 24, 28);
+  font-family: var(--cds-font-sans);
+  font-size: 36px;
+  font-weight: 600;
+  line-height: 40px;
+  letter-spacing: -0.9px;
 }
 
+/* same page, lead paragraph: 18px / 28px / 400 / rgb(63, 64, 68), parent margin-top 8px */
 .docs-desc {
-  margin: 0 0 2rem;
-  color: var(--cds-text-muted);
-  font-size: var(--cds-font-size-body);
-  line-height: var(--cds-leading-body);
+  margin: 8px 0 0;
+  color: rgb(63, 64, 68);
+  font-size: 18px;
+  font-weight: 400;
+  line-height: 28px;
+  letter-spacing: normal;
 }
 
-/* .font-heading: 1.5rem / 1.3 / font-ui-serif / weight 500 */
+/* ngrok.com/docs/gateway/overview section h2, measured 2026-10-06: 24px / 32px / 600 / -0.6px, margin 36px 0 18px, oklch(0.21 0.034 264.665) */
 .docs-article .prose :where(h2) {
-  color: var(--cds-text-primary);
-  font-family: var(--font-ui-serif);
-  font-size: 1.5rem;
-  font-weight: 500;
-  line-height: 1.3;
+  color: oklch(0.21 0.034 264.665);
+  font-family: var(--cds-font-sans);
+  font-size: 24px;
+  font-weight: 600;
+  line-height: 32px;
+  letter-spacing: -0.6px;
+  margin-top: 36px;
+  margin-bottom: 18px;
 }
 
 .docs-article .prose :where(h3) {
@@ -564,10 +572,65 @@ body {
   font-weight: 400;
 }
 
+/* ngrok.com/docs/gateway/overview body list item, measured 2026-10-06: 16px / 28px / 400 / rgb(63, 64, 68), margin 8px 0 */
 .docs-article .prose {
-  color: var(--cds-text-secondary);
-  font-size: 1rem;
-  line-height: 1.5;
+  color: rgb(63, 64, 68);
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 28px;
+  letter-spacing: normal;
+}
+
+.docs-article .prose :where(li) {
+  margin-top: 8px;
+  margin-bottom: 8px;
+}
+
+.docs-wordmark {
+  font-family: var(--font-logo);
+  font-weight: 400;
+}
+
+/* portkey.ai/docs/product/mcp-gateway/observability table, measured 2026-10-06:
+   table has no card fill, no outer border, no radius;
+   table 14px / 20px / rgb(62, 66, 67);
+   th 14px / 20px / 600 / oklch(0.21 0.034 264.665), padding 0 8px 8px 0, no fill;
+   td padding 8px 8px 8px 0, no vertical rule;
+   tr border-bottom 1px solid rgb(238, 242, 243).
+   The prose table rules (card background, radius, border, th muted fill) are reset here. */
+.docs-article .prose .docs-data-table table {
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  border-collapse: collapse;
+  overflow: visible;
+  margin: 0;
+  color: rgb(62, 66, 67);
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 20px;
+}
+
+.docs-article .prose .docs-data-table th {
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid rgb(238, 242, 243);
+  color: oklch(0.21 0.034 264.665);
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 20px;
+  padding: 0 8px 8px 0;
+}
+
+.docs-article .prose .docs-data-table td {
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid rgb(238, 242, 243);
+  padding: 8px 8px 8px 0;
+}
+
+.docs-article .prose .docs-data-table tr {
+  border-bottom: 1px solid rgb(238, 242, 243);
 }
 
 .docs-article .prose a {
@@ -607,6 +670,8 @@ body {
   width: 100%;
   height: auto;
   margin: 1rem 0 0;
+  box-sizing: border-box;
+  border: 1px solid #e5e5e5;
 }
 
 .docs-diagram-lightbox {
@@ -652,25 +717,305 @@ body {
 }
 
 .docs-article figure.shiki,
-.docs-article .prose figure {
+.docs-article .prose figure:has(pre) {
+  position: relative;
   overflow: hidden;
-  margin: 1rem 0;
-  border: 1px solid #d4d4d4;
-  border-radius: 6px;
-  background: #f5f5f5;
+  margin: 1.25rem 0 2rem;
+  border: 1px solid rgb(11 12 16 / 10%);
+  border-radius: 8px;
+  background: #fff;
   box-shadow: none;
 }
 
+.docs-article figure.shiki:has(.docs-code-group),
+.docs-article .prose figure:has(.docs-code-group) {
+  margin: 0;
+  padding: 0;
+  overflow: visible;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.docs-article figure.shiki pre,
+.docs-article figure.shiki pre.shiki,
+.docs-article .prose figure:has(pre) pre {
+  margin: 0;
+  background: transparent !important;
+  font-family: var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo, Monaco,
+    Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size: 14px;
+  line-height: 24px;
+}
+
+.docs-code-lang-icon {
+  width: 16px;
+  height: 16px;
+  flex: none;
+  object-fit: contain;
+}
+
 .docs-article figure.shiki .absolute {
-  top: 6px;
-  right: 6px;
+  top: 12px;
+  right: 16px;
+}
+
+.docs-article figure.shiki .absolute button {
+  display: flex;
+  width: 26px;
+  height: 26px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  background: #f3f4f6;
+  color: #9ca3af;
 }
 
 .docs-article figure.shiki [role="region"],
-.docs-article figure [role="region"] {
+.docs-article figure:has(pre) [role="region"] {
+  padding: 14px 48px 14px 16px;
+  background: transparent;
+  font-size: 14px;
+  line-height: 24px;
+}
+
+.docs-article figure.shiki:has(.docs-code-group) [role="region"],
+.docs-article figure:has(.docs-code-group) [role="region"] {
+  padding: 0;
+  background: transparent;
+}
+
+.docs-article figure.shiki:has(.docs-code-group) > .absolute,
+.docs-article figure:has(.docs-code-group) > .absolute {
+  display: none;
+}
+
+/*
+  Code window, measured on
+  https://academy.claude.com/use-cases/explore-what-claude-can-do-for-you
+  (2026-10-09, light theme, computed style of .rounded-2xl.bg-surface-2.p-2.shadow-md
+  and its traffic-light row / .rounded-xl.bg-surface-1.shadow-card-ring):
+  outer bg rgb(255,255,255), radius 16px, padding 8px.
+  Drop shadow is a smaller cut of the measured
+  0 2px 4px rgb(11 11 11 / 0.07), 0 6px 16px rgb(11 11 11 / 0.08).
+  dots row flex, align center, gap 6px, padding 0 8px 8px;
+  dots 10px, rgb(208,59,59) / rgb(250,178,25) / rgb(0,147,0);
+  inner bg rgb(252,252,251), radius 12px, overflow hidden,
+  shadow 0 0 0 1px rgb(11 11 11 / 0.1).
+*/
+.docs-code-group {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  margin: 1.25rem 0 2rem;
+  padding: 8px;
+  border: 0;
+  border-radius: 16px;
+  background: #fff;
+  color: #0b0b0b;
+  box-shadow:
+    0 1px 2px 0 rgb(11 11 11 / 0.05),
+    0 2px 6px 0 rgb(11 11 11 / 0.06);
+}
+
+.docs-code-chrome {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 8px 8px;
+}
+
+.docs-code-dots {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 6px;
+}
+
+.docs-code-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 9999px;
+}
+
+.docs-code-dot[data-tone="danger"] {
+  background: rgb(208, 59, 59);
+}
+
+.docs-code-dot[data-tone="warning"] {
+  background: rgb(250, 178, 25);
+}
+
+.docs-code-dot[data-tone="success"] {
+  background: rgb(0, 147, 0);
+}
+
+.docs-code-group-tabs {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  line-height: 24px;
+}
+
+.docs-code-group-tab {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 4px 0 6px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #6b7280;
+  font-family: var(--cds-font-sans);
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 24px;
+  white-space: nowrap;
+}
+
+.docs-code-group-tab:first-child {
+  margin-left: 0;
+}
+
+.docs-code-group-tab-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 6px;
+  border-radius: 8px;
+}
+
+.docs-code-group-tab:hover .docs-code-group-tab-label {
+  background: rgb(229 231 235 / 50%);
+  color: #273fc3;
+}
+
+.docs-code-group-tab[data-active="true"] {
+  color: #273fc3;
+}
+
+.docs-code-group-tab-mark {
+  position: absolute;
+  right: 0;
+  bottom: -6px;
+  left: 0;
+  height: 2px;
+  border-radius: 9999px;
+  background: #273fc3;
+}
+
+.docs-code-copy {
+  display: inline-flex;
+  width: 26px;
+  height: 26px;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  margin-left: auto;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: #9ca3af;
+  cursor: pointer;
+}
+
+.docs-code-copy:hover {
+  color: #6b7280;
+}
+
+.docs-code-group-panel {
+  overflow: auto;
+  border-radius: 12px;
+  background: #fcfcfb;
   padding: 16px;
+  box-shadow: 0 0 0 1px rgb(11 11 11 / 0.1);
+}
+
+.docs-code-group pre,
+.docs-code-group code,
+.docs-article .prose .docs-code-group pre,
+.docs-article .prose .docs-code-group code,
+.docs-article .prose .docs-code-group pre code {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent !important;
+  box-shadow: none;
+}
+
+.docs-code-group-panel > :first-child {
+  margin-top: 0;
+}
+
+.docs-code-group-panel > :last-child {
+  margin-bottom: 0;
+}
+
+.docs-code-pre,
+.docs-article .prose .docs-code-pre {
+  margin: 0;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  font-family: var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo, Monaco,
+    Consolas, monospace;
   font-size: 13px;
-  line-height: 20px;
+  line-height: 24px;
+}
+
+.docs-code-pre .line span {
+  color: var(--shiki-light);
+}
+
+.docs-article .docs-os-tabs {
+  overflow: visible !important;
+  margin: 0.75rem 0 1.5rem;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.docs-article .docs-os-tabs [role="tablist"] {
+  gap: 1.5rem;
+  margin: 0;
+  padding: 0;
+  border-bottom: 1px solid rgb(11 12 16 / 10%);
+  background: transparent;
+}
+
+.docs-article .docs-os-tabs [role="tab"] {
+  border: 0;
+  border-bottom: 1.5px solid transparent;
+  border-radius: 0;
+  margin-bottom: -1px;
+  padding: 8px 0;
+  background: transparent;
+  color: #3f4044;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.docs-article .docs-os-tabs [role="tab"][data-state="active"] {
+  border-bottom-color: #2563eb;
+  color: #2563eb;
+}
+
+.docs-article .docs-os-tabs [role="tabpanel"] {
+  margin: 0;
+  padding: 12px 0 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+.docs-article .docs-os-tabs [role="tabpanel"] > figure {
+  margin: 0;
 }
 
 .docs-alert {
@@ -805,6 +1150,83 @@ body {
   background: var(--cds-fill-primary-hover);
 }
 
+.docs-video {
+  position: relative;
+  margin: 1.5rem 0 2rem;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  border: 0;
+  border-radius: 0;
+  background: #111111;
+}
+
+.docs-video-framed {
+  border: 1px solid #e5e5e5;
+  border-radius: 20px;
+}
+
+.docs-article .prose .docs-shot {
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  margin: 1rem 0 0;
+  border: 1px solid #e5e5e5;
+  border-radius: 12px;
+}
+
+/* 空文档占位：边框和圆角沿用 .docs-shot，文字色沿用 --cds-text-secondary */
+.docs-article .prose .docs-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--cds-gap-md);
+  margin: 1.5rem 0;
+}
+
+.docs-article .prose .docs-placeholder-text {
+  margin: 0;
+  color: var(--cds-text-secondary);
+}
+
+/* 白底 + 12px 内边距，和官网联系弹窗里二维码的容器一致 */
+.docs-article .prose .docs-placeholder-qr {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 12px;
+  border: 1px solid #e5e5e5;
+  border-radius: 12px;
+  background: #fff;
+}
+
+.docs-article .prose .docs-placeholder-qr svg {
+  display: block;
+  margin: 0;
+}
+
+.docs-video iframe {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+
+.docs-video-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #737373;
+  background: #f4f4f8;
+  font-size: 14px;
+}
+
+.concept-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--cds-gap-sm);
+  margin: 1.25rem 0 2rem;
+}
+
 .start-grid {
   display: grid;
   grid-template-columns: 1fr;
@@ -825,12 +1247,14 @@ body {
   padding: var(--cds-pad-lg);
   border: 1px solid var(--cds-border);
   border-radius: var(--cds-radius);
+  background: #ffffff;
   color: #111111;
   text-decoration: none;
 }
 
 .docs-article .prose .start-card,
 .docs-article .prose .start-card:hover {
+  background: #ffffff;
   color: #111111;
   font-weight: 400;
   text-decoration: none;
@@ -851,7 +1275,8 @@ body {
 }
 
 .start-card:hover {
-  background: #f3f3f0;
+  border-color: #273fc3;
+  background: #ffffff;
 }
 
 .start-card-icon {
@@ -860,7 +1285,11 @@ body {
   flex: none;
   margin-top: 2px;
   object-fit: contain;
-  filter: brightness(0);
+  color: #111111;
+}
+
+.docs-traffic-policy-icon {
+  transform: rotate(-90deg);
 }
 
 .start-card-body {
@@ -882,4 +1311,86 @@ body {
   font-size: var(--cds-font-size-body);
   font-weight: 400;
   line-height: var(--cds-leading-body);
+}
+
+/*
+  Overview cards, measured on https://ngrok.com/docs/start (2026-10-04):
+  grid 2 columns, column-gap 16px; card radius 16px, border gray-950/10,
+  padding 20px 24px, margin-block 8px; icon 24px; title 16px/600, margin-top 16px;
+  body 16px/24px/400, margin-top 4px, rgb(81, 81, 85); hover changes the border.
+  "You may also need to" is a 3-column grid of title-only cards.
+*/
+.overview-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  column-gap: 16px;
+  margin: 0;
+}
+
+.overview-grid-3 {
+  display: grid;
+  grid-template-columns: 1fr;
+  column-gap: 16px;
+  margin: 0;
+}
+
+@media (min-width: 768px) {
+  .overview-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .overview-grid-3 {
+    grid-template-columns: 1fr 1fr 1fr;
+  }
+}
+
+.docs-article .prose .overview-card,
+.docs-article .prose .overview-card:hover {
+  display: block;
+  margin: 8px 0;
+  padding: 20px 24px;
+  border: 1px solid var(--cds-border);
+  border-radius: 16px;
+  background: #ffffff;
+  color: #111111;
+  font-weight: 400;
+  text-decoration: none;
+}
+
+.docs-article .prose .overview-card:hover {
+  border-color: #273fc3;
+  background: #ffffff;
+}
+
+.overview-card-icon {
+  display: block;
+  width: 24px;
+  height: 24px;
+  color: #273fc3;
+}
+
+.docs-article .prose .overview-card h3,
+.docs-article .prose .overview-card:hover h3 {
+  margin: 16px 0 0;
+  color: #111111;
+  font-family: var(--cds-font-sans);
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 24px;
+  text-decoration: none;
+}
+
+.docs-article .prose .overview-card p,
+.docs-article .prose .overview-card:hover p {
+  margin: 4px 0 0;
+  color: rgb(81, 81, 85);
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 24px;
+  text-decoration: none;
+}
+
+.docs-article .prose .overview-pill h3,
+.docs-article .prose .overview-pill:hover h3 {
+  margin: 0;
 }

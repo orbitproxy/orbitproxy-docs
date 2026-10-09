@@ -1,0 +1,12 @@
+{
+  "title": "MCP 网关",
+  "defaultOpen": true,
+  "pages": [
+    "overview",
+    "quickstart",
+    "connector",
+    "composer",
+    "observability",
+    "use-cases"
+  ]
+}

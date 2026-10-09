@@ -3,7 +3,62 @@ title: MCP 访问控制
 description: 按身份源授权 MCP Tools，并拦截敏感 SQL 或文件操作。
 ---
 
-针对 MCP 云端点配置 RBAC：只有指定的 AI 客户端能调用内网 MCP，并可屏蔽高危 Tool（删除表数据、读取敏感文件、重启容器等）。规则挂在云端点上，上游 MCP 不用改。
+只让指定的 AI 客户端调用内网 MCP，并屏蔽高危 Tool（删除表数据、读取敏感文件、重启容器等）。未授权的 Tool 调用在网关被拦截，不会打到内网 MCP，上游 MCP 不用改。
+
+这条规则只出现在 MCP 云端点上。
+
+## 配置参考
+
+这条策略在 MCP 调用到达网关时执行。
+
+### 配置字段
+
+<DocsTable>
+<table>
+  <thead>
+    <tr>
+      <th>字段</th>
+      <th>说明</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>规则名称</td>
+      <td>这条规则在控制台里的名字</td>
+    </tr>
+    <tr>
+      <td>Endpoint</td>
+      <td>要锁定的 MCP Endpoint。规则只作用在选中的 Endpoint 上</td>
+    </tr>
+    <tr>
+      <td>身份源</td>
+      <td>发起调用的 AI 客户端身份。授权按身份源分别配置</td>
+    </tr>
+    <tr>
+      <td>Tools</td>
+      <td>该身份源允许调用的 Tool。没有勾选的 Tool 不能调用</td>
+    </tr>
+    <tr>
+      <td>敏感 SQL</td>
+      <td>按需拦截更新、删除、DDL 这几类 SQL</td>
+    </tr>
+    <tr>
+      <td>文件操作</td>
+      <td>按需拦截文件的读、写、移动</td>
+    </tr>
+  </tbody>
+</table>
+</DocsTable>
+
+## 行为
+
+网关先确定这次调用来自哪个身份源，再按这条身份源的授权来判断。
+
+- 调用的 Tool 在已勾选的 Tools 里，继续往后检查。
+- 调用的 Tool 没有被勾选，请求在网关结束，不会进入内网 MCP。
+- 勾选了敏感 SQL 或文件操作的拦截后，命中的调用同样在网关结束，即使这个 Tool 本身已被授权。
+
+只锁定已配置的 Endpoint。没有选中的 Endpoint，不受这条规则影响。
 
 ## 在控制台怎么配
 
@@ -14,4 +69,10 @@ description: 按身份源授权 MCP Tools，并拦截敏感 SQL 或文件操作�
 5. 按需拦截敏感 SQL（更新 / 删除 / DDL）或文件操作（读 / 写 / 移动）
 6. 保存
 
-只锁定已配置的 Endpoint。未授权的 Tool 调用在网关被拦下，不会打到内网 MCP。场景见 [Agent 受控访问内网 MCP](/docs/cases/mcp/agent-ops)。
+## 示例
+
+Endpoint 选内网 MySQL 的 MCP，身份源选某个 Cursor 客户端，Tools 只勾选查询类的 Tool，同时打开敏感 SQL 里的更新、删除和 DDL 拦截。
+
+这个客户端发起的查询会转到内网 MCP。它调用没勾选的 Tool，或者发出 `DELETE`、`DROP` 这类语句，在网关就被拦下，内网 MCP 收不到。
+
+场景见 [Agent 受控访问内网 MCP](/docs/mcp-gateway/use-cases/connect-internal)。

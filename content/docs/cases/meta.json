@@ -1,5 +1,0 @@
-{
-  "title": "用户使用场景",
-  "defaultOpen": true,
-  "pages": ["api", "mcp", "webhook", "access-logs"]
-}

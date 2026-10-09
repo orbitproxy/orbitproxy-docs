@@ -1,0 +1,47 @@
+---
+title: 概述
+---
+
+import { ObservabilityConceptIcon } from "@/components/docs-concept-icons"
+import { PlugsConnected, Rocket, Stack } from "@phosphor-icons/react/dist/ssr"
+
+连接你任何形态（Streamable HTTP, Stdio），任何位置（远程， 内网， localhost本地）的MCP 服务，并为其提供统一的认证鉴权， 访问控制，以及强大的可观测性
+
+orbitproxy MCP网关既是连接MCP服务和AI Agent的桥梁，也同时可以做到企业级认证鉴权和访问控制以及对AI Agent 的调用进行每一次深度追踪，让AI Agent 的操作不再是黑盒，同时可以做到限制AI Agent的异常操作和敏感行为，对高危行为进行拦截和告警
+
+直接连接到 MCP 服务器时，每个AI Agent都需要为每台服务器单独配置凭据。而使用 MCP 网关，客户端只需向 orbitproxy 进行一次身份验证。网关会处理所有已配置MCP 服务的凭据注入、权限检查和请求日志记录。
+
+<div className="overview-grid">
+  <a className="overview-card" href="/docs/mcp-gateway/quickstart">
+    <Rocket className="overview-card-icon" weight="regular" aria-hidden="true" />
+    <h3>快速开始</h3>
+    <p>3 分钟快速让Cursor连接内网Mysql MCP服务</p>
+  </a>
+</div>
+
+## 概念
+
+<div className="concept-list">
+  <a className="start-card" href="/docs/mcp-gateway/connector">
+    <PlugsConnected className="start-card-icon" weight="regular" aria-hidden="true" />
+    <span className="start-card-body">
+      <h3>MCP Connector</h3>
+      <p>把客户端上的 MCP 服务接入平台。默认仅内部可用，可按需分配公网地址，或交给 MCP Composer 聚合。</p>
+    </span>
+  </a>
+  <a className="start-card" href="/docs/mcp-gateway/composer">
+    <Stack className="start-card-icon" weight="regular" aria-hidden="true" />
+    <span className="start-card-body">
+      <h3>MCP Composer</h3>
+      <p>把多台机器上的 MCP 收成一个公网入口。对外只配置一条云端点，统一做鉴权和限制。</p>
+    </span>
+  </a>
+  <a className="start-card" href="/docs/mcp-gateway/observability">
+    <ObservabilityConceptIcon className="start-card-icon" />
+    <span className="start-card-body">
+      <h3>MCP可观测性</h3>
+      <p>记录 Agent 每一次 Tool 调用的时间、对象和参数，调用不再是黑盒。</p>
+    </span>
+  </a>
+</div>
+

@@ -1,19 +1,95 @@
 ---
 title: 云端点
-description: orbitproxy 提供的公网访问入口，创建、删除和配置可在控制面板集中管理。
 ---
 
-云端点是orbitproxy 提供的公网访问入口，orbitproxy 提供安全域名来保证安全及合规性，其创建，删除和配置均可通过控制面板进行集中管理，不同网关提供的云端点配置能力会有部分差异，但整体你可以理解为云端点是你内网服务的入口门户， orbitproxy 云网关接受到的流量会根据你的云端点配置经过安全过滤以后流向你指定的内网服务
+云端点是orbitproxy的网关流量入口，云端点是持久存在，始终在线的，其创建，删除和配置均可通过orbitproxy控制中心进行集中管理， 它们会一直存在，直到被显式删除，进入 orbitproxy 云端点的流量会根据用户的配置规则经过安全验证以后流向背后的内网服务器或者本地计算机。
 
-## 目前orbitproxy 提供云端点类型分为如下几类
+<Diagram src="/diagrams/endpoint.png" alt="云端点流量示意：公网请求经过云端点到达本地计算机或内网服务器" />
 
-1. **<span className="docs-em">API 云端点</span>**： 提供基础的HTTPS / TCP服务，常用于配置[localhost 或者内网站点公开分享](/docs/cases/api/localhost-api)、[内网 ERP / CMS / 运营后台](/docs/cases/api/intranet-erp-cms)或者常规TCP流量转发
-2. **<span className="docs-em">Webhook 云端点</span>**： 针对 webhook 场景设计的云端点类型， 相较于API云端点， Webhook云端点流量会经过[Webhook 网关](/docs/gateway/webhook)， 并具备独特的[云端 webhook验证](/docs/policy/webhook-verify)能力以及 [webhook 请求重放](/docs/cases/api/wechat-webhook)能力
-3. **<span className="docs-em">MCP云端点</span>**: MCP 网关专属端点类型，用于对接内网/localhost服务的MCP服务，其中特殊的[MCP Composer](/docs/cases/mcp/agent-ops) 云端点可以对多个内网服务器上的多个MCP服务进行聚合，无论背后多少个MCP服务，对外始终只需要配置一个端点，也只需要对一个端点进行统一的身份鉴权和限制管理，MCP云端点也带来独特的[MCP流量策略](/docs/policy)
+在本文档中，你将了解到在 orbitproxy 控制中心中针对云端点的相关操作以及对应概念
 
-orbitproxy 对公网流量进行统一的安全巡检保护， 会拒绝常规恶意流量以及基于最新的TLS版本提供加密服务，但你仍可以配置以下策略来进一步提高云端点的安全性，特别是针对生产环境的TCP & MCP & Webhook而言:
+## 1. 云端点的基本概念组成
 
-- **[IP访问控制](/docs/policy/ip-access)**:  限制云端点只能被指定IP访问（白名单）或者拒绝指定IP访问（黑名单）
-- **[API访问密钥](/docs/policy/api-key)**:  针对部分HTTPS API调用场景， 可以要求调用端提供常规的Authorization 令牌
-- **[BasicAuth](/docs/policy/basic-auth)**: 针对部分内网站点或者NAS访问场景， 必须输入指定的 username + password才能访问内容
-- **[MCP访问控制](/docs/policy/mcp-access)**： 针对MCP配置RBAC限制，只能指定的AI客户端允许调用内网MCP服务， 以及屏蔽某些高危敏感MCP调用（如删除表数据，删除库数据， 读取敏感文件内容）
+正常情况下，一个HTTP/TCP 云端点中包含以下概念
+
+<DocsTable>
+<table>
+  <thead>
+    <tr>
+      <th>字段</th>
+      <th>创建 / 编辑</th>
+      <th>说明</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>协议</td>
+      <td>创建时选择，之后不可修改</td>
+      <td>可选 HTTPS 或 TCP，表明该云端点在公网中的工作模式，如一般的 web 站点，后端API都是HTTPS协议， 而像数据库或者 redis 这种基础设施层则是TCP协议</td>
+    </tr>
+    <tr>
+      <td>公网地址</td>
+      <td>创建时必选，之后不可修改</td>
+      <td>每个云端点的公网访问域名，该域名在orbitproxy 控制中心的域名页面进行创建</td>
+    </tr>
+    <tr>
+      <td>客户端</td>
+      <td>创建时必选，之后不可修改</td>
+      <td>该云端点的流量在经过 orbitproxy API网关验证以后要转发至你的哪台工作客户端</td>
+    </tr>
+    <tr>
+      <td>内网地址</td>
+      <td>创建时必填，可编辑</td>
+      <td>流量最终转发到的内网服务，必须是 <code>host:port</code> 格式，例如 <code>127.0.0.1:8080</code></td>
+    </tr>
+    <tr>
+      <td>带宽(Mbps)</td>
+      <td>创建时必填，可编辑</td>
+      <td>该云端点的带宽上限，整数且不小于 1。orbitproxy 会限制该云端点的传输速率不超过这个值，上行和下行合计计算。设置得越低，大文件传输或高并发时越容易被限速。带宽会占用账户的总带宽额度，不能超过当前订阅的单隧道最高带宽，也不能超过账户剩余的总带宽</td>
+    </tr>
+    <tr>
+      <td>请求体上限</td>
+      <td>仅 HTTPS 创建时填写，可编辑</td>
+      <td>允许进入该云端点的请求体大小，单位可选 KB 或 MB。最低 4KB，默认 64KB，这代表请求你云端点的最大请求体容量，超过这个容量的请求会被 orbitproxy 云网关拒绝</td>
+    </tr>
+    <tr>
+      <td>云端点状态</td>
+      <td>系统维护，只读</td>
+      <td>分为「启用」和「已锁定」。已锁定表示你的云端点因为权益到期或者违规使用被系统停止使用，需要在控制中心通过「启用」或「解锁云端点」重新激活，已锁定的云端点将不会进行任何流量转发，请勿使用云端点做异常或违规行为</td>
+    </tr>
+    <tr>
+      <td>维护模式</td>
+      <td>仅 HTTPS 云端点可操作</td>
+      <td>在列表中通过「进入维护」「关闭维护」切换，维护中的云端点会显示「维护中」标签。进入维护后，所有访问该域名的流量会被 orbitproxy 云网关熔断，不再转发给内网服务，你可以在流量策略的自定义响应中配置维护页面</td>
+    </tr>
+    <tr>
+      <td>流量策略</td>
+      <td>在流量策略页配置</td>
+      <td>过滤， 控制， 管理和编排进入自身内网服务的每一个连接请求，见<a href="/docs/gateway/traffic-policy">流量策略概览</a></td>
+    </tr>
+  </tbody>
+</table>
+</DocsTable>
+
+## 2. 云端点的创建
+
+云端点的管理和创建在orbitproxy控制中心的HTTP/TCP云端点页面中，你可以通过点击新增云端点来创建一个云端点
+
+<img src="/images/endpoint-list.png" alt="HTTP/TCP 云端点页面" className="docs-shot" />
+
+<img src="/images/endpoint-create-guide.png" alt="新增 HTTP/TCP 云端点表单字段释义" className="docs-shot" />
+
+## 3. 云端点的基本管理
+
+你可以通过点击单个云端点卡片或者点击云端点卡片右侧的操作菜单按钮并选择对应的操作项进入**云端点管理详情**
+
+<img src="/images/click-endpoint-details.png" alt="新增 HTTP/TCP 云端点表单字段释义" className="docs-shot" />
+
+单个云端点的菜单可操作行为及其作用如下:
+
+- 流量策略： 进入对该云端点的流量策略配置面板， 流量策略可以做到对你的云端点追加访问控制，认证鉴权，日志追踪等高阶能力，而不需要你的内网服务改动任何一行代码
+- 云端点访问日志： 如果在流量策略中开启了对该云端点的日志追踪能力， 点击该操作项会进入该云端点的最近访问日志记录面板
+- 编辑： 修改该云端点的部分配置，目前仅支持修改带宽， body size和内网地址，如需修改协议或者域名， 请删除云端点并重建
+- 详情： 进入云端点详情页面
+- 进入维护： 将该云端点进入维护状态，orbitproxy 会熔断该云端点的所有请求， 并返回给访问端一个维护中的系统维护页，你也可以通过[自定义异常页](/docs/policy/custom-response)配置自定义维护页面， 详情可查看[快速让生产环境服务进入维护熔断模式](/docs/gateway/use-cases/maintenance-mode)
+- 删除： 删除该云端点，此操作不可逆

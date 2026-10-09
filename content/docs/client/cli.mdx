@@ -1,32 +1,86 @@
 ---
-title: CLI
-description: orbitproxy 命令行参考。
+title: 客户端命令行界面（Cli）
 ---
 
-## 安装
+orbitproxy 命令行 CLI 提供了用于与 orbitproxy API 交互的内置命令
+
+## 用法
 
 ```bash
-brew install orbitproxy
+./orbitproxy [command] [flags]
 ```
 
-## 常用命令
+## authtoken
+
+用 authtoken 注册这台机器。本地生成机器身份，向控制面注册，并把配置写到 `<workdir>/<machineKey>/`。
 
 ```bash
-orbitproxy http 5173
+orbitproxy authtoken <token>
 ```
 
-```bash
-orbitproxy tcp 3306
-```
-
-```bash
-orbitproxy authtoken <YOUR_TOKEN>
-```
-
-## 常用参数
-
-| 参数 | 说明 |
+| 参数 | 作用 |
 | --- | --- |
-| `--domain` | 使用自定义域名，而不是默认 `*.orbitproxy.dev` |
-| `--region` | 边缘区域，例如 `ap-east` |
-| `--webhook` | 绑定一个 Webhook Provider 配置，启用验签 |
+| `--name` | 机器显示名。不填时用本机 hostname。 |
+| `--machine-key` | 用已有的 machine key 恢复这台机器。 |
+| `--force` | 本地已有配置时覆盖。不带这个参数时，配置已存在会失败。 |
+
+
+## run
+
+启动 orbitproxy 命令行，启动时会和 orbitproxy 边缘节点产生一个TLS Over TCP的加密连接，用于转发公网流量到内网服务，以及下发各类控制指令信息
+
+```bash
+./orbitproxy run
+```
+
+| 参数 | 作用 |
+| --- | --- |
+| `--machine-key` | 指定 `<workdir>` 下的 machine key。目录里有多台机器时必须带，否则报 `multiple machines under ...; pass --machine-key`。 |
+| `--log` | 不填时，标准输出是终端就显示状态卡。值为 `legacy` 时改为 slog。其他值报 `invalid --log value`。 |
+
+
+## status
+
+查看当前机器上的 orbitproxy 客户端信息
+
+```bash
+./orbitproxy status
+```
+
+## service
+
+将客户端注册为系统服务， 以获得开机自启动和挂后台能力，该操作需要```sudo```或者超管权限
+
+```bash
+sudo ./orbitproxy service install # 安装 orbitproxy 系统服务
+sudo ./orbitproxy service uninstall # 卸载 orbitproxy 系统服务
+sudo ./orbitproxy service start # 启动orbitproxy系统服务， 服务必须先 install 才能启动
+sudo ./orbitproxy service stop # 停止 orbitproxy 系统服务
+sudo ./orbitproxy service restart # 重启 orbitproxy 系统服务
+sudo ./orbitproxy service status # 查看orbitproxy系统服务状态
+```
+
+
+服务文件：
+
+- macOS：`/Library/LaunchDaemons/com.orbitproxy.machine.plist`
+- Linux：`/etc/systemd/system/orbitproxy.service`，服务名 `orbitproxy`
+- Windows：服务名 `OrbitProxy`
+
+## reset
+
+初始化客户端， 删除除 cmd 程序自身以外的所有配置文件及相关目录信息， ，该操作需要```sudo```或者超管权限
+
+```bash
+sudo ./orbitproxy reset
+```
+
+## delete
+
+停掉客户端和操作系统服务，连数据根目录和 `~/.orbitproxy/bin` 一起删掉。不能撤销。
+
+```bash
+sudo ./orbitproxy delete
+```
+
+卸载客户端并清楚全部 orbitproxy 相关目录，，该操作需要```sudo```或者超管权限
