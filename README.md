@@ -9,9 +9,9 @@ orbitproxy 可以把 localhost 和内网服务发布到公网，提供 API 网�
 | 模块 | 说明 | 入口 |
 |---|---|---|
 | 开始使用 | orbitproxy 的工作方式与核心概念 | [网关如何工作](https://docs.orbitproxy.cc/docs/start/how-it-works) |
-| API Gateway | 云端点、流量入口、Webhook、访问日志与典型用例 | [概览](https://docs.orbitproxy.cc/docs/gateway/overview) · [快速开始](https://docs.orbitproxy.cc/docs/gateway/quickstart) · [云端点](https://docs.orbitproxy.cc/docs/gateway/endpoints) |
-| MCP Gateway | 通过 MCP Connector 与 Composer 安全暴露、聚合内网 MCP 服务 | [概览](https://docs.orbitproxy.cc/docs/mcp-gateway/overview) · [快速开始](https://docs.orbitproxy.cc/docs/mcp-gateway/quickstart) · [Connector](https://docs.orbitproxy.cc/docs/mcp-gateway/connector) · [Composer](https://docs.orbitproxy.cc/docs/mcp-gateway/composer) |
-| 流量策略 | API Key、Basic Auth、IP 访问控制、HTTP 头、自定义响应、MCP 访问控制、Webhook 校验、访问日志 | [流量策略](https://docs.orbitproxy.cc/docs/policy) |
+| API Gateway | 云端点、流量入口、Webhook、访问日志与典型用例 | [概览](https://docs.orbitproxy.cc/docs/gateway/overview) · [云端点](https://docs.orbitproxy.cc/docs/gateway/endpoints) |
+| MCP Gateway | 通过 MCP Connector 与 Composer 安全暴露、聚合内网 MCP 服务 | [概览](https://docs.orbitproxy.cc/docs/mcp-gateway/overview) · [Connector](https://docs.orbitproxy.cc/docs/mcp-gateway/connector) · [Composer](https://docs.orbitproxy.cc/docs/mcp-gateway/composer) |
+| 流量策略 | API Key、Basic Auth、IP 访问控制、HTTP 头、自定义响应、MCP 访问控制、Webhook 校验、访问日志 | [流量策略](https://docs.orbitproxy.cc/docs/policy/ip-access-control) |
 | 客户端 | orbitproxy CLI 的安装与使用 | [CLI](https://docs.orbitproxy.cc/docs/client/cli) |
 
 ## 常见场景

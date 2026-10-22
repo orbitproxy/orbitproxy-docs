@@ -1,0 +1,69 @@
+---
+title: 常见问题
+description: orbitproxy 的常见问题，涵盖客户端安全与开源、网络与重连、域名、Webhook、CORS、访问日志和套餐限制。
+---
+
+## orbitproxy 是病毒吗？
+
+不是。orbitproxy 客户端是把本地或内网服务接入云网关的命令行程序，源代码完全公开，行为可以逐条核对：
+
+- **源代码公开**：命令行客户端和 SDK 均为开源项目，源码在 [orbitproxy-machine](https://github.com/orbitproxy/orbitproxy-machine) 和 [orbitproxy-go](https://github.com/orbitproxy/orbitproxy-go) 仓库中，可以自行审阅，也可以自行构建。
+- **只有出站连接**：客户端只主动向云网关发起一条出站连接，不在本机监听任何端口，不会让本机新增可被扫描或探测的端口。
+- **不读取转发内容**：客户端在云网关连接与你配置的本地服务之间转发字节，不解析、不修改、不存储转发的内容，日志中也不记录内容。
+- **私钥不离开本机**：机器身份的私钥在本机生成，仅用于本机签名，不会被上传。
+- **云网关的权限有限**：云网关只能通过已认证的会话，向客户端下发创建和关闭端点、停止、重启、升级、预检这几类指令，客户端不接受会话之外的任何控制。
+- **随时可以停止和删除**：`orbitproxy stop` 或 `orbitproxy service stop` 可以停止客户端，`orbitproxy delete` 会删除全部本地数据和程序本身。
+
+orbitproxy 客户端会持续保持出站连接、可以启动你配置的 Stdio MCP 命令，并支持自我升级。个别安全软件可能因为这类行为给出提示。遇到提示时，请确认程序来自官方[下载页](https://dashboard.app.orbitproxy.cloud/install)或其提供的安装脚本。从其他渠道获得的、名为 orbitproxy 的程序，请不要运行。
+
+完整的行为说明见[客户端架构安全性](/docs/client/security)。如果你发现 orbitproxy 被安全软件误报，请通过[联系我们](/docs/start/contact)告诉我们。
+
+## orbitproxy 客户端是开源的吗？
+
+是。命令行客户端和 SDK 均为开源项目，源代码分别在 [orbitproxy-machine](https://github.com/orbitproxy/orbitproxy-machine) 和 [orbitproxy-go](https://github.com/orbitproxy/orbitproxy-go) 仓库中，可以自行审阅和构建。[客户端架构安全性](/docs/client/security)中描述的行为都可以在源代码中核对。
+
+## 运行客户端需要开放入站端口吗？
+
+不需要。客户端只主动向云网关发起一条出站连接，公网流量沿同一条连接送达本机。客户端不在本机监听任何端口，因此不需要在防火墙或路由器上开放入站端口，也不需要公网 IP 或 VPN。详见[客户端工作原理](/docs/client/how-it-works)。
+
+## 网络切换后客户端还能继续工作吗？
+
+可以。客户端每 30 秒发送一次保活消息检查连接是否可用。网络中断、Wi-Fi 切换到移动网络、笔记本休眠唤醒之后，客户端会发现连接失效并自动重连，重试间隔逐渐拉长。
+
+客户端不会主动放弃重连，除非云网关明确要求它停止，例如在控制中心停止了该客户端，或者云网关拒绝了这条会话。
+
+## orbitproxy 会读取或上传我的私钥和敏感密钥吗？
+
+不会。机器身份的私钥在本机生成，仅用于本机签名，不会被上传。通过 MCP Connector 接入的服务如果依赖账号密码这类敏感配置，orbitproxy 要求以环境变量的形式保存在你自己的机器上，仅在运行时临时读取，不会上报，也不会暴露给 AI Agent。
+
+## 同一个 Machine Key 可以在多个程序中使用吗？
+
+不可以。每个 SDK 客户端对应一个 Machine Key，一个程序使用一个 SDK 客户端，Machine Key 不能在多个程序之间复用。创建方式见[安装指引](/docs/client/install)中的「使用 SDK 接入」。
+
+## 使用 orbitproxy 的系统域名需要购买域名或备案吗？
+
+不需要。可以在控制中心的公网域名页面，基于 orbitproxy 的系统域名创建子域名，无需购买域名，也无需为该子域名备案。
+
+## 关闭分享后，已使用的域名会保留吗？
+
+会。`orbitproxy close` 关闭分享后，分享所占用的域名保留，可供后续创建分享时复用。
+
+## 本机服务可以接收微信支付、支付宝的回调吗？
+
+可以。微信支付和支付宝只会向公网 HTTPS URL 投递回调。把 Webhook 云端点指向本机服务的端口，就可以在本机接收、查看和重放回调，并在网关校验签名后再转发到本机服务。详见 [Webhook 网关](/docs/gateway/webhook)和 [Webhook 验证](/docs/policy/webhook-verify)。
+
+## 如何为云端点添加 CORS 响应头？
+
+使用 [HTTP Header 策略](/docs/policy/http-header)追加响应头。例如追加响应头 `access-control-allow-origin`，值为 `*`，调用方收到的响应就会带有该 CORS 响应头，上游服务无需修改代码。
+
+## 访问日志保留多久？
+
+保留天数可选 1 天、3 天或 7 天，可选范围由当前订阅决定。超过保留天数的日志会被清除。请求体和响应体的采集上限同样由订阅决定。详见[访问日志](/docs/policy/access-log)。
+
+## 创建分享时提示超出套餐限制是什么意思？
+
+分享数量、域名数量、带宽配额都受当前订阅限制，没有有效订阅时同样无法创建。命令行客户端在这种情况下以退出码 `4` 退出，详见[客户端命令行界面](/docs/client/cli)。
+
+## 在哪里可以获得帮助？
+
+见[联系我们](/docs/start/contact)。

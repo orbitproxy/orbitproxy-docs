@@ -14,29 +14,11 @@ import {
 
 import "./global.css"
 
-const mmEuclid = localFont({
-  src: [
-    {
-      path: "../public/fonts/MMEuclidLatin-400.woff2",
-      weight: "400",
-      style: "normal",
-    },
-    {
-      path: "../public/fonts/MMEuclidLatin-500.woff2",
-      weight: "500",
-      style: "normal",
-    },
-  ],
-  variable: "--font-mm-euclid",
+const geist = localFont({
+  src: "../public/fonts/Geist-Variable.woff2",
+  variable: "--font-geist",
   display: "swap",
-})
-
-const alata = localFont({
-  src: "../public/fonts/Alata-Regular.ttf",
-  variable: "--font-alata",
-  weight: "400",
-  style: "normal",
-  display: "swap",
+  weight: "100 900",
 })
 
 const geistMono = localFont({
@@ -83,7 +65,7 @@ export default function Layout({ children }: { children: ReactNode }) {
   return (
     <html
       lang="zh-CN"
-      className={`${mmEuclid.variable} ${alata.variable} ${geistMono.variable}`}
+      className={`${geist.variable} ${geistMono.variable}`}
       suppressHydrationWarning
     >
       <body>

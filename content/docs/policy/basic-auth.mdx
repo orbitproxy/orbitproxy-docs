@@ -1,68 +1,52 @@
 ---
 title: BasicAuth 基础鉴权
-description: 在云端点上要求 HTTP Basic Auth，凭证不对的请求返回 401。
+description: 在云端点上要求 HTTP Basic Auth，凭证不正确的请求返回 401。
 ---
 
-在云端点上要求 HTTP Basic Auth。用户名和密码正确的请求会转到上游，其余请求直接返回 `401 Unauthorized`，不会打到内网。
+<PolicyTag scope="api" />
+
+BasicAuth 基础鉴权策略在云端点上强制要求 HTTP Basic Auth。携带正确用户名和密码的请求转发到上游服务，其余请求直接返回 `401 Unauthorized`，不会到达上游服务。
 
 ## 配置参考
 
-这条策略在请求到达网关时执行。
+### 执行阶段
+
+请求到达网关时执行。
 
 ### 配置字段
 
 <DocsTable>
-<table>
-  <thead>
-    <tr>
-      <th>字段</th>
-      <th>说明</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td>规则名称</td>
-      <td>这条规则在控制台里的名字</td>
-    </tr>
-    <tr>
-      <td>Credentials</td>
-      <td>允许通过的账号，格式是 <code>username:password</code>，一行一组。密码长度 8–128 个字符</td>
-    </tr>
-  </tbody>
-</table>
+
+| 字段 | 说明 |
+| --- | --- |
+| 规则名称 | 规则的名称，用于区分同一云端点上的多条规则 |
+| Credentials | 允许通过的凭证，格式为 `username:password`，每行一组。密码长度为 8 至 128 个字符 |
+
 </DocsTable>
 
 ## 行为
 
-网关按 [RFC 7235](https://datatracker.ietf.org/doc/html/rfc7235) 校验 HTTP Basic Authentication。请求里的账号和已配置的 `username:password` 对得上，就继续往后转发，最后到达上游；对不上，请求在网关结束，返回 `401 Unauthorized`。
+网关按 [RFC 7235](https://datatracker.ietf.org/doc/html/rfc7235) 校验 HTTP Basic Authentication。请求中的凭证与已配置的 `username:password` 一致时，请求继续转发，最终到达上游服务；不一致时，请求在网关终止，并返回 `401 Unauthorized`。
 
 ### 其他限制
 
-密码最短 8 个字符，最长 128 个字符。`username:password` 里如果出现多个冒号，第一个冒号是用户名和密码的分界，后面的内容都算进密码。
+密码最短 8 个字符，最长 128 个字符。`username:password` 中包含多个冒号时，第一个冒号是用户名与密码的分隔符，其后的内容全部属于密码。
 
 ### 校验过程
 
-- 请求必须带 `Authorization` 头，形式是 `Authorization: Basic <credentials>`。`<credentials>` 是 `用户名:密码` 的 Base64。
-- 校验通过后，请求继续转发到上游。
-- 校验失败返回 `401`。浏览器会弹出原生用户名和密码框，让调用方重新提交。
-
-## 在控制台怎么配
-
-1. 打开对应云端点，切到 **流量策略**
-2. 展开 **BasicAuth 基础鉴权**，点 **添加规则**
-3. 填 **规则名称**
-4. 在 **Credentials** 里按 `username:password` 添加账号，一行一组
-5. 保存
+- 请求必须携带 `Authorization` 请求头，格式为 `Authorization: Basic <credentials>`。其中 `<credentials>` 是 `username:password` 的 Base64 编码。
+- 校验通过后，请求继续转发到上游服务。
+- 校验失败时返回 `401`。浏览器收到该响应后会显示原生的用户名和密码输入框，调用方可以重新提交凭证。
 
 ## 示例
 
-先把 `username:password` 做 Base64。`user:password1` 编码后是 `dXNlcjpwYXNzd29yZDE=`。
+先对 `username:password` 做 Base64 编码。`user:password1` 的编码结果为 `dXNlcjpwYXNzd29yZDE=`。
 
 ```bash
-curl https://你的云端点/ \
+curl https://<云端点域名>/ \
   -H "Authorization: Basic dXNlcjpwYXNzd29yZDE="
 ```
 
-凭证正确时，网关把请求转到上游，并返回上游的响应。
+凭证正确时，网关将请求转发到上游服务，并返回上游服务的响应。
 
-不带 `Authorization` 头，或用户名密码不对时，会收到 `401 Unauthorized`，浏览器会弹出登录框。
+请求未携带 `Authorization` 请求头，或用户名、密码不正确时，网关返回 `401 Unauthorized`，浏览器显示登录框。

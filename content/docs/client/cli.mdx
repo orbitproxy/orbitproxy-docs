@@ -2,85 +2,158 @@
 title: 客户端命令行界面（Cli）
 ---
 
-orbitproxy 命令行 CLI 提供了用于与 orbitproxy API 交互的内置命令
+orbitproxy 命令行客户端（`orbitproxy`）的完整参考，包括命令和标志。
 
-## 用法
+客户端程序默认位于 `~/.orbitproxy/bin`（Windows 上为 `C:\Users\<用户名>\.orbitproxy\bin`）。该目录未加入 `PATH` 时，需要使用完整路径调用，或在该目录下以 `./orbitproxy` 调用。
 
-```bash
-./orbitproxy [command] [flags]
-```
+## CLI 命令
 
-## authtoken
+可以使用以下命令注册和登录本机、运行客户端、管理分享，以及安装系统服务：
 
-用 authtoken 注册这台机器。本地生成机器身份，向控制面注册，并把配置写到 `<workdir>/<machineKey>/`。
+<DocsTable>
 
-```bash
-orbitproxy authtoken <token>
-```
+| 命令 | 描述 | 示例 |
+| --- | --- | --- |
+| `orbitproxy authtoken <token>` | 使用 authtoken 注册本机。命令在本地生成机器密钥对，向控制面完成注册，并把配置写入 `<workdir>/<machineKey>/orbitproxy.yml`。本地已存在该机器的配置时，需要使用 `--force` 覆盖。 | `orbitproxy authtoken <YOUR_AUTHTOKEN>` |
+| `orbitproxy login` | 通过浏览器确认登录并注册本机，使用设备授权流程。在交互式终端中，命令自动打开浏览器并轮询授权结果；在非交互环境中，命令输出确认链接后立即退出，浏览器确认完成后需执行 `orbitproxy status` 取回授权结果。此前登出过的机器会被恢复，已有的分享和域名保持不变。 | `orbitproxy login` |
+| `orbitproxy logout` | 登出本机。命令使本机密钥在控制面失效，停止以后台方式运行的客户端，并删除本地的机器目录。分享、域名和机器记录保留在云端。以前台或系统服务方式运行的客户端不会被停止，命令会输出警告。 | `orbitproxy logout --yes` |
+| `orbitproxy status` | 查看登录状态和本机配置，包括数据根目录、客户端版本，以及每台机器的 machine key、目录、云网关地址和进程状态。不连接云网关，不占用运行锁，可在客户端运行期间执行。输出第一行为 `logged_in yes` 或 `logged_in no`，未登录时以退出码 `3` 结束。存在尚未完成的浏览器登录时，会先尝试取回授权结果。 | `orbitproxy status --json` |
+| `orbitproxy run` | 运行客户端。读取机器配置，与云网关建立加密连接，接收并转发公网流量，直到被中断。前台、后台和系统服务三种运行方式共用同一把运行锁，同一台机器同一时间只能有一个客户端在运行。请参阅[运行方式](#运行方式)。 | `orbitproxy run` |
+| `orbitproxy run --background` | 脱离终端在后台运行客户端，并等待其连上云网关后返回，等待时间上限为 15 秒，超时返回错误码 `client_offline`（退出码 `6`）。客户端已在运行时，输出 `already running (<方式> pid <PID>)` 并等待其在线。 | `orbitproxy run --background` |
+| `orbitproxy stop` | 停止由 `orbitproxy run --background` 启动的客户端。以前台或系统服务方式运行的客户端不受影响，此时命令返回错误码 `not_background`。客户端未运行时输出 `not running`。 | `orbitproxy stop` |
+| `orbitproxy proxy add` | 创建分享并输出公网地址。命令只在云端创建分享，不会启动客户端，客户端需要处于运行状态公网流量才能到达本地服务。输出两行：第一行为公网地址，第二行为 `<公网地址> -> <本地地址> (<proxy_id>)`。本地端口当前没有程序监听时，仍会创建分享并追加一行警告。 | `orbitproxy proxy add --type api_gateway --protocol https --port 3000` |
+| `orbitproxy list` | 列出本机的分享。每个分享输出一行：`<proxy_id>  <公网地址> -> <本地地址>  <状态>`。没有分享时输出 `no tunnels`。使用 `--json` 时，`data.tunnels` 为分享数组。 | `orbitproxy list` |
+| `orbitproxy close <proxyId\|port>` | 关闭分享，分享所占用的域名保留，可供后续创建分享时复用。参数为纯数字时按本地端口匹配：本机没有分享该端口时返回 `tunnel_not_found`；同一端口对应多个分享时返回 `ambiguous_port`，并在错误数据中列出候选项，此时需要使用 `proxy_id` 关闭。 | `orbitproxy close 3000` |
+| `orbitproxy service install` | 安装并启动系统服务，使客户端随系统启动并在后台运行。需要管理员权限。本机已有客户端在运行时，安装会失败。 | `sudo orbitproxy service install` |
+| `orbitproxy service uninstall` | 停止并移除系统服务。需要管理员权限。 | `sudo orbitproxy service uninstall` |
+| `orbitproxy service start` | 启动系统服务。服务必须已安装；本机以前台或后台方式运行客户端时，启动会失败。需要管理员权限。 | `sudo orbitproxy service start` |
+| `orbitproxy service stop` | 停止系统服务。需要管理员权限。 | `sudo orbitproxy service stop` |
+| `orbitproxy service restart` | 重启系统服务。需要管理员权限。 | `sudo orbitproxy service restart` |
+| `orbitproxy service status` | 输出系统服务状态。 | `sudo orbitproxy service status` |
+| `orbitproxy reset` | 清除本机的 orbitproxy 配置。命令停止正在运行的客户端及其子进程，移除系统服务，删除数据根目录下除 `bin/` 以外的全部内容，程序本身保留。本机已安装系统服务时需要管理员权限。没有可清除的内容时输出 `Nothing to remove`。 | `orbitproxy reset` |
+| `orbitproxy delete` | 从本机彻底移除 orbitproxy。处理范围与 `reset` 相同，并同时删除 `bin/`，即客户端程序自身。该操作不可撤销，需要重新从控制台安装才能再次使用。本机已安装系统服务时需要管理员权限。 | `orbitproxy delete` |
+| `orbitproxy version` | 输出客户端版本。使用 `--json` 时，`data.version` 为版本号。 | `orbitproxy version` |
 
-| 参数 | 作用 |
+</DocsTable>
+
+未指定 `--workdir` 时，`reset` 和 `delete` 仅会操作名为 `.orbitproxy` 的目录。
+
+## CLI 标志
+
+使用以下命令行标志自定义命令的行为。每个命令均可追加 `--help` 查看内置帮助。
+
+<DocsTable>
+
+| 标志 | 描述 | 示例 |
+| --- | --- | --- |
+| `--workdir` | 数据根目录，默认为 `~/.orbitproxy`，配置和日志存放于 `<workdir>/<machineKey>/`。适用于所有命令。 | `orbitproxy run --workdir /data/.orbitproxy` |
+| `--machine-key` | 指定要操作的机器。适用于 `authtoken`（恢复已有机器）、`logout`、`status`、`run`、`stop`、`proxy add`、`list`、`close` 和 `service`。未指定时的选择规则请参阅[选择机器](#选择机器)。 | `orbitproxy status --machine-key <machineKey>` |
+| `--json` | 以 JSON 格式输出，便于脚本解析。适用于 `status`、`list`、`close`、`proxy add` 和 `version`。输出格式请参阅[机器可读输出](#机器可读输出)。 | `orbitproxy list --json` |
+| `--name` | 机器的显示名称，未指定时使用本机主机名。仅适用于 `authtoken`。 | `orbitproxy authtoken <YOUR_AUTHTOKEN> --name my-laptop` |
+| `--force` | 本地已存在该机器的配置时予以覆盖，未指定时命令失败。仅适用于 `authtoken`。 | `orbitproxy authtoken <YOUR_AUTHTOKEN> --machine-key <machineKey> --force` |
+| `--yes` | 跳过登出确认提示，在非交互环境中默认跳过。仅适用于 `logout`。 | `orbitproxy logout --yes` |
+| `--background` | 脱离终端在后台运行客户端。仅适用于 `run`。 | `orbitproxy run --background` |
+| `--log` | 控制标准输出的形式。未指定时，标准输出为终端则显示状态卡片；取值 `legacy` 时改为输出日志。其他取值将报 `invalid --log value`。仅适用于 `run`。 | `orbitproxy run --log legacy` |
+| `--type` | 分享类型，必填，目前仅支持 `api_gateway`。仅适用于 `proxy add`。 | `orbitproxy proxy add --type api_gateway --protocol https --port 3000` |
+| `--protocol` | 公网协议，必填，取值 `https` 或 `tcp`。仅适用于 `proxy add`。 | `orbitproxy proxy add --type api_gateway --protocol tcp --port 22` |
+| `--port` | 本地服务的端口，必填，范围 1–65535。仅适用于 `proxy add`。 | `orbitproxy proxy add --type api_gateway --protocol https --port 8080` |
+| `--host` | 本地服务的地址，默认 `127.0.0.1`。仅适用于 `proxy add`。 | `orbitproxy proxy add --type api_gateway --protocol https --host 192.168.1.20 --port 8080` |
+| `--subdomain` | 使用或创建指定的子域名，仅适用于 `proxy add` 且 `--protocol` 为 `https` 时。 | `orbitproxy proxy add --type api_gateway --protocol https --port 3000 --subdomain my-app` |
+
+</DocsTable>
+
+### 选择机器
+
+一个数据根目录下可以存在多台机器的配置。未指定 `--machine-key` 时，命令按以下顺序确定操作对象：
+
+1. 数据根目录下 `default` 文件记录的机器。
+2. 数据根目录下仅有的一台机器。
+
+存在多台机器且无法确定时，命令报错并提示使用 `--machine-key`。`orbitproxy run` 的前台运行方式不读取 `default` 文件，存在多台机器时必须显式指定。
+
+### 运行方式
+
+<DocsTable>
+
+| 方式 | 启动命令 | 停止方式 |
+| --- | --- | --- |
+| 前台 | `orbitproxy run` | 在终端按 `Ctrl+C`，或向进程发送 `SIGTERM`。 |
+| 后台 | `orbitproxy run --background` | `orbitproxy stop` |
+| 系统服务 | `orbitproxy service install` | `orbitproxy service stop` |
+
+</DocsTable>
+
+后台运行的日志写入 `<machineKey>/logs/orbitproxy.log`，标准输出写入 `<machineKey>/logs/background.out`。
+
+在 macOS 上，`orbitproxy run` 不能使用 `sudo` 启动，应以当前用户运行，`sudo` 仅用于 `service` 子命令。
+
+`orbitproxy status` 输出的进程状态取值为 `foreground pid <PID>`、`background pid <PID>`、`service pid <PID>` 和 `not running`。最近一次启动失败且尚未恢复时，`not running` 后的括号内附带失败原因。
+
+### 系统服务
+
+系统服务使用 `SUDO_USER`（即发起 `sudo` 的用户）的家目录作为数据根目录，客户端配置仍保存在 `~/.orbitproxy`，仅注册服务本身需要管理员权限：macOS 和 Linux 上使用 `sudo`，Windows 上使用以管理员身份运行的终端。
+
+<DocsTable>
+
+| 系统 | 服务 |
 | --- | --- |
-| `--name` | 机器显示名。不填时用本机 hostname。 |
-| `--machine-key` | 用已有的 machine key 恢复这台机器。 |
-| `--force` | 本地已有配置时覆盖。不带这个参数时，配置已存在会失败。 |
+| macOS | `/Library/LaunchDaemons/com.orbitproxy.machine.plist` |
+| Linux | `/etc/systemd/system/orbitproxy.service`，服务名 `orbitproxy` |
+| Windows | 服务名 `OrbitProxy` |
 
+</DocsTable>
 
-## run
+### 机器可读输出
 
-启动 orbitproxy 命令行，启动时会和 orbitproxy 边缘节点产生一个TLS Over TCP的加密连接，用于转发公网流量到内网服务，以及下发各类控制指令信息
+使用 `--json` 时，命令成功后标准输出为一行 JSON：
 
-```bash
-./orbitproxy run
+```json
+{"ok":true,"data":{"tunnels":[]}}
 ```
 
-| 参数 | 作用 |
+命令失败时，标准输出为：
+
+```json
+{"ok":false,"error":{"code":"not_logged_in","message":"本机还没有登录 OrbitProxy","hint":"…"}}
+```
+
+不使用 `--json` 时，错误信息输出到标准错误，格式为 `error: <message> (<code>)`，存在处理建议时追加一行 `hint: <hint>`。
+
+上述格式、错误码和退出码适用于 `login`、`logout`、`status`、`stop`、`list`、`close`、`proxy add` 和 `run --background`。`authtoken`、前台 `run`、`service`、`reset` 和 `delete` 失败时直接输出错误信息，退出码为 `1`。
+
+各命令 `data` 中的字段如下：
+
+<DocsTable>
+
+| 命令 | `data` 字段 |
 | --- | --- |
-| `--machine-key` | 指定 `<workdir>` 下的 machine key。目录里有多台机器时必须带，否则报 `multiple machines under ...; pass --machine-key`。 |
-| `--log` | 不填时，标准输出是终端就显示状态卡。值为 `legacy` 时改为 slog。其他值报 `invalid --log value`。 |
+| `status` | `logged_in`、`machine_key`、`running`、`mode` |
+| `proxy add` | `proxy_id`、`public_url`、`local_addr`、`protocol`、`created`、`warnings`。本地端口无监听时 `warnings` 包含 `local_not_listening`。 |
+| `list` | `tunnels`，每项包含 `proxy_id`、`public_url`、`local_addr`、`protocol`、`status`、`created_via`、`created_at`。 |
+| `close` | `proxy_id`、`public_url`、`local_addr`、`closed` |
+| `version` | `version` |
 
+</DocsTable>
 
-## status
+### 退出码
 
-查看当前机器上的 orbitproxy 客户端信息
+<DocsTable>
 
-```bash
-./orbitproxy status
-```
+| 退出码 | 含义 |
+| --- | --- |
+| `0` | 成功。 |
+| `1` | 其他错误。 |
+| `2` | 参数错误，例如端口不合法、协议不受支持。 |
+| `3` | 本机未登录，或登录已失效、已过期、已被拒绝。 |
+| `4` | 超出套餐限制，例如分享数量、域名数量、带宽配额，或当前没有有效订阅。 |
+| `5` | 无法连接控制面，通常由网络问题引起。 |
+| `6` | 本机客户端未能连上云网关。 |
 
-## service
+</DocsTable>
 
-将客户端注册为系统服务， 以获得开机自启动和挂后台能力，该操作需要```sudo```或者超管权限
+## 另请参阅
 
-```bash
-sudo ./orbitproxy service install # 安装 orbitproxy 系统服务
-sudo ./orbitproxy service uninstall # 卸载 orbitproxy 系统服务
-sudo ./orbitproxy service start # 启动orbitproxy系统服务， 服务必须先 install 才能启动
-sudo ./orbitproxy service stop # 停止 orbitproxy 系统服务
-sudo ./orbitproxy service restart # 重启 orbitproxy 系统服务
-sudo ./orbitproxy service status # 查看orbitproxy系统服务状态
-```
-
-
-服务文件：
-
-- macOS：`/Library/LaunchDaemons/com.orbitproxy.machine.plist`
-- Linux：`/etc/systemd/system/orbitproxy.service`，服务名 `orbitproxy`
-- Windows：服务名 `OrbitProxy`
-
-## reset
-
-初始化客户端， 删除除 cmd 程序自身以外的所有配置文件及相关目录信息， ，该操作需要```sudo```或者超管权限
-
-```bash
-sudo ./orbitproxy reset
-```
-
-## delete
-
-停掉客户端和操作系统服务，连数据根目录和 `~/.orbitproxy/bin` 一起删掉。不能撤销。
-
-```bash
-sudo ./orbitproxy delete
-```
-
-卸载客户端并清楚全部 orbitproxy 相关目录，，该操作需要```sudo```或者超管权限
+- [快速入门](/docs/start/quickstart)：交给 AI Agent 发布第一个服务。
+- [安装指引](/docs/client/install)：手动安装客户端并发布第一个服务。
+- [客户端工作原理](/docs/client/how-it-works)：了解会话、重连和流量转发机制。
+- [了解 .orbitproxy 目录](/docs/client/orbitproxy-directory)：了解命令在本机读写的文件。

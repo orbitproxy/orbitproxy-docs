@@ -1,61 +1,20 @@
 ---
-title: 概览
+title: API网关
 ---
 
-import {
-  EndpointConceptIcon,
-  ObservabilityConceptIcon,
-  TrafficPolicyConceptIcon,
-} from "@/components/docs-concept-icons"
-import { Rocket } from "@phosphor-icons/react/dist/ssr"
+API 网关是一种服务器，它在分布式软件架构（通常位于云环境中）中充当客户端和上游服务之间的中介。作为反向代理，它处理客户端请求，将其路由到相应的上游服务，并将来自多个上游服务的响应聚合为一个响应发送给客户端。API 网关还提供其他功能，例如身份验证、授权、速率限制、缓存和监控。通过集中管理这些功能，API 网关简化了上游应用程序的开发、管理和扩展。
 
-连接你任何位置(本地 localhost, 企业内网环境， 云主机， Nas等)的HTTP / TCP 服务，并为其提供统一的认证鉴权， 访问控制，以及强大的可观测性
+<Diagram src="/diagrams/api-gateway-architecture.png" alt="orbitproxy API 网关架构图：公网调用方经入口网关层、安全策略层、流量编辑层、路由分发层，再转发到 Localhost 或生产环境 VPC" />
 
-orbitproxy API网关可以替代你的 nginx / caddy 成为你的云网关系统，让你再无需部署 clickhouse, elk等日志集群服务的情况下快速获得强大的流量观测能力， 也可以通过界面化的配置快速为你的产品服务叠加访问控制，认证鉴权，流量限速， 负载均衡等高阶扩展能力，降低团队运维门槛，让你的服务永不掉线, 保护你的服务不受DDOS, 端口扫描， 请求重放，中间人攻击等恶意攻击
+orbitproxy API网关可以替代你的 nginx / caddy 成为你的云网关系统，作为你背后服务的公网统一入口，可以为你做到:
 
-另一方面，无论你的前端项目和后端服务是工作在 localhost 笔记本电脑，亦或者云主机内网服务器，orbitproxy都能提供公网访问能力， 这使得用户可以轻松利用 orbitproxy API Gateway 做到:
+- 让你再无需部署 clickhouse, elk等日志集群服务且无需更改一行代码的情况下快速获得强大的流量观测能力，orbitproxy 为你的站点提供用户访问画像，请求上下文追踪，流量高峰等强大能力
+- 通过界面化的配置快速为你的产品服务叠加访问控制，认证鉴权，流量限速， 负载均衡等高阶扩展能力，降低团队运维门槛， 保护你的服务不受DDOS, 端口扫描， 请求重放，中间人攻击等恶意攻击
+- 在无需域名和服务器的情况下快速让任何环境（云主机 vps, localhost）的服务发布到公开网络， 这在调试微信开发或者临时分享产品时非常有用
 
-- localhost接收微信支付等第三方 webhook 回调
-- 无需公网域名 & 云主机服务器 快速发布上线产品
-- 企业内网演示环境快速分享给外网客户
-- 我的世界幻兽帕鲁等游戏联机
-- 其他任何只要支持网络套接字的HTTP TCP服务
+orbitproxy API网关本质上抽象和封装了一套完整的企业级项目运维及安全能力， 你可以毫不费力的将各种运维策略和安全策略快速装载到你的服务上， 来确保你的服务达到生产环境标准，而对于你自身而言， 弱化了运维和安全团队的要求标准，也无需再为每个服务都独立去编写对应的安全代码或者流量处理代码
 
-<div className="overview-grid">
-  <a className="overview-card" href="/docs/gateway/quickstart">
-    <Rocket className="overview-card-icon" weight="regular" aria-hidden="true" />
-    <h3>快速开始</h3>
-    <p>3 分钟快速发布本地 localhost 服务</p>
-  </a>
-</div>
+我们可以举个经典的例子 (QPS限制)， 当我们的项目部署进生产环境以后， 我们很担心被QPS攻击（攻击者在极短时间内使用 for 循环在数秒内发出几万乃至数十万的请求到你的服务器），这意味着我们需要为我们的项目实现一套请求限制逻辑， 使用 orbitproxy API网关你只需要在UI界面中简单配置一行表单即可快速达成目标，这种配置压力哪怕是普通的产品经理也能看懂
 
-## API流量策略
+或许上面的例子 nginx和 caddy 这类老牌工具也能实现， 那我们可以再来看一个例子(防端口扫描)， 当我们的项目暴露到公网环境那一刻， 如果你看过你产品的访问日志的话，你会发现一个特性，无时无刻都会有对应的境外端口扫描和钓鱼请求到你的服务器， 而多数时候你自身并无感知， HTTPS也帮你抵御了大多数攻击，但这些请求依然存在，所以成熟的产品在多数情况下会直接屏蔽境外流量，而这些在 orbitproxy 中依然只需要一行配置， 但在 caddy 或者 nginx 中， 你需要被迫实现一套插件逻辑来达到同样目的。
 
-<div className="concept-list">
-  <a className="start-card" href="/docs/gateway/traffic-policy">
-    <TrafficPolicyConceptIcon className="start-card-icon" />
-    <span className="start-card-body">
-      <h3>API流量策略</h3>
-      <p>在请求进入内网之前过滤、鉴权、改写或直接拒绝。</p>
-    </span>
-  </a>
-</div>
-
-## 概念
-
-<div className="concept-list">
-  <a className="start-card" href="/docs/gateway/endpoints">
-    <EndpointConceptIcon className="start-card-icon" />
-    <span className="start-card-body">
-      <h3>云端点</h3>
-      <p>公网访问入口。创建、删除和配置都在控制台完成，流量按云端点配置转发到内网服务。</p>
-    </span>
-  </a>
-  <a className="start-card" href="/docs/gateway/observability">
-    <ObservabilityConceptIcon className="start-card-icon" />
-    <span className="start-card-body">
-      <h3>API可观测性</h3>
-      <p>查看每次请求的路径、状态和耗时，并可以重放已接收的请求。</p>
-    </span>
-  </a>
-</div>

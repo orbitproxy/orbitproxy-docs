@@ -2,7 +2,6 @@
   "title": "流量策略",
   "defaultOpen": true,
   "pages": [
-    "index",
     "ip-access",
     "ip-access-control",
     "basic-auth",

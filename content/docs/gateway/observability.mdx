@@ -11,7 +11,7 @@ orbitproxy 对请求可以进行 3 个维度的采集和存储：
 - **请求头 / 响应头**：在包含元数据的情况下，会存储公网到来请求的请求头信息，以及响应头信息
 - **完整请求体**：详细记录每一次请求的完整请求上下文，如请求头、响应头、请求体、响应体。在 MCP 场景中，这意味着 AI 对你内网 MCP 产生的每一次调用详情都会被记录，你可以在流量策略的访问日志功能里找到具体的配置入口。每次响应体最多采集 64KB，否则会被 orbitproxy 节点忽略，你也可以通过定制服务来获取更大的采集容量
 
-采集数据在收到请求时起，在你的 orbitproxy 账户中保留 3–7 天（随订阅级别变化）。
+采集数据在收到请求时起，在你的 orbitproxy 账户中保留 1 天、3 天或 7 天（保留天数可选，可选范围随订阅级别变化）。
 
 ## 访问来源指纹
 
@@ -36,6 +36,5 @@ orbitproxy 会对所有流经 orbitproxy 云网关的流量进行统计。这意
 <div className="docs-more-list">
 
 - [官网可观测性解决方案页面](https://official_web.app.orbitproxy.cloud/solution/full-chain-access-logs)
-- [使用 orbitproxy gateway 来替代 clickhouse, elk, loki 等日志观测组件](/docs/cases/access-logs)
 
 </div>

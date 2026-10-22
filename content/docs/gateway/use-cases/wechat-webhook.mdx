@@ -2,6 +2,8 @@
 title: localhost/内网服务接收微信支付等第三方 webhook回调
 ---
 
+<PolicyTag scope="api" />
+
 使用 orbitproxy 来允许 localhost接收微信支付等第三方 webhook回调， 并了解如何使用 webhook verify 在生产环境中在 orbitproxy API 网关验证进入你内网服务的 webhook 回调的合法性
 
 orbitproxy 允许 微信支付、支付宝 和 互亿无线等受信任的第三方云服务向运行在用户内网的应用程序发送 Webhook。orbitproxy 会在其网络边缘验证 Webhook 签名，从而确保只有合法流量才能到达你的应用程序。

@@ -1,0 +1,483 @@
+direction: down
+
+vars: {
+  d2-config: {
+    layout-engine: elk
+    pad: 32
+    theme-overrides: {
+      N7: "#fdfdf7"
+    }
+  }
+}
+
+classes: {
+  gap: {
+    style: {
+      fill: transparent
+      stroke: transparent
+      stroke-width: 0
+    }
+  }
+  title: {
+    shape: rectangle
+    label.near: bottom-center
+    style: {
+      fill: transparent
+      stroke: transparent
+      stroke-width: 0
+      font-size: 15
+      bold: true
+      font-color: "#171717"
+    }
+  }
+  conn: {
+    shape: rectangle
+    height: 28
+    style: {
+      fill: transparent
+      stroke: transparent
+      stroke-width: 0
+      font-size: 13
+      bold: true
+      font-color: "#171717"
+    }
+  }
+  space: {
+    shape: rectangle
+    style: {
+      fill: transparent
+      stroke: transparent
+      stroke-width: 0
+    }
+  }
+  note: {
+    shape: rectangle
+    label.near: center-left
+    height: 40
+    style: {
+      fill: transparent
+      stroke: transparent
+      stroke-width: 0
+      font-size: 15
+      font-color: "#171717"
+    }
+  }
+  layer: {
+    height: 40
+    style: {
+      fill: "#ffffff"
+      stroke: "#333333"
+      border-radius: 0
+      font-size: 16
+      bold: true
+      font-color: "#171717"
+    }
+  }
+  item: {
+    height: 40
+    style: {
+      fill: "#ffffff"
+      stroke: "#333333"
+      border-radius: 0
+      font-size: 15
+      font-color: "#171717"
+    }
+  }
+  dashed-item: {
+    height: 40
+    style: {
+      fill: "#ffffff"
+      stroke: "#333333"
+      stroke-dash: 3
+      border-radius: 0
+      font-size: 15
+      font-color: "#171717"
+    }
+  }
+  sub: {
+    style: {
+      fill: "#ffffff"
+      stroke: "#333333"
+      border-radius: 0
+      font-size: 14
+      bold: true
+      font-color: "#171717"
+    }
+  }
+  orange: {
+    style: {
+      fill: "#ffe6cc"
+      stroke: "#d79b00"
+      border-radius: 0
+      font-size: 15
+      bold: true
+      font-color: "#171717"
+    }
+  }
+  blue: {
+    style: {
+      fill: "#dae8fc"
+      stroke: "#6c8ebf"
+      border-radius: 0
+      font-size: 15
+      bold: true
+      font-color: "#171717"
+    }
+  }
+  yellow: {
+    style: {
+      fill: "#fff2cc"
+      stroke: "#d6b656"
+      border-radius: 0
+      font-size: 15
+      bold: true
+      font-color: "#171717"
+    }
+  }
+  gray: {
+    style: {
+      fill: "#f5f5f5"
+      stroke: "#666666"
+      border-radius: 0
+      font-size: 15
+      bold: true
+      font-color: "#171717"
+    }
+  }
+  green: {
+    style: {
+      fill: "#d5e8d4"
+      stroke: "#82b366"
+      border-radius: 0
+      font-size: 15
+      bold: true
+      font-color: "#171717"
+    }
+  }
+  purple: {
+    style: {
+      fill: "#e1d5e7"
+      stroke: "#9673a6"
+      border-radius: 0
+      font-size: 15
+      bold: true
+      font-color: "#171717"
+    }
+  }
+  call: {
+    style: {
+      stroke: "#333333"
+      stroke-width: 1
+      font-size: 15
+      bold: true
+      font-color: "#171717"
+    }
+  }
+  bypass: {
+    style: {
+      stroke: "#333333"
+      stroke-width: 1
+      stroke-dash: 4
+      font-size: 15
+      bold: true
+      font-color: "#171717"
+    }
+  }
+  secure: {
+    style: {
+      stroke: "#00a64f"
+      stroke-width: 2
+      font-size: 14
+      bold: true
+      font-color: "#00a64f"
+    }
+  }
+}
+
+grid-columns: 2
+grid-gap: 40
+
+colL: "" {
+  grid-columns: 1
+  grid-gap: 36
+  vertical-gap: 72
+  style: {
+    fill: transparent
+    stroke: transparent
+    stroke-width: 0
+  }
+
+  callers: "AI Agent\n\n如：Cursor、Trae、Claude、Copilot 等" {
+    class: orange
+    height: 100
+  }
+
+  gateway: "" {
+    class: blue
+    grid-columns: 1
+    grid-gap: 8
+    horizontal-gap: 0
+    vertical-gap: 4
+
+    title: "orbitproxy MCP Gateway" {
+      class: title
+      width: 720
+      height: 43
+    }
+
+    body: "" {
+      grid-columns: 2
+      grid-gap: 8
+      horizontal-gap: 24
+      vertical-gap: 4
+      style: {
+        fill: transparent
+        stroke: transparent
+        stroke-width: 0
+      }
+
+      stack: "" {
+        width: 294
+        grid-columns: 1
+        grid-gap: 8
+        vertical-gap: 4
+        style: {
+          fill: transparent
+          stroke: transparent
+          stroke-width: 0
+        }
+
+          entry: "入口网关层" {
+            class: layer
+            height: 44
+          }
+          c0: "next" {class: conn}
+          security: "安全策略层" {
+            class: layer
+            height: 84
+          }
+          c1: "next" {class: conn}
+          rbac: "权限控制层" {
+            class: layer
+            height: 108
+          }
+          c2: "next" {class: conn}
+          dispatch: "聚合路由层" {
+            class: layer
+            height: 60
+          }
+
+          entry -- c0 {class: call}
+          c0 -> security {class: call}
+          security -- c1 {class: call}
+          c1 -> rbac {class: call}
+          rbac -- c2 {class: call}
+          c2 -> dispatch {class: call}
+      }
+
+      notes: "" {
+        grid-columns: 1
+        grid-gap: 8
+        vertical-gap: 4
+        style: {
+          fill: transparent
+          stroke: transparent
+          stroke-width: 0
+        }
+
+          entry: |md
+              提供 MCP 公网域名 · TLS 终止  
+          | {
+            class: note
+            width: 290
+            height: 44
+          }
+          n0: "" {class: space; height: 28}
+          security: |md
+              集成 WAF · 实时巡检  
+              IP / 地域访问限制 · API Key 鉴权  
+              防护恶意攻击和扫描请求  
+          | {
+            class: note
+            width: 290
+            height: 84
+          }
+          n1: "" {class: space; height: 28}
+          rbac: |md
+              企业级 RBAC，为团队每位成员  
+              单独分配 MCP 操作权限  
+              拦截成员 AI Agent 发出的  
+              敏感 SQL、读写文件等高危操作  
+          | {
+            class: note
+            width: 290
+            height: 108
+          }
+          n2: "" {class: space; height: 28}
+          dispatch: |md
+              多个 MCP 聚合成 1 个公网入口  
+              按 Server Key 路由到目标 MCP  
+          | {
+            class: note
+            width: 290
+            height: 60
+          }
+      }
+
+      stack.entry -> notes.entry {class: call}
+      stack.security -> notes.security {class: call}
+      stack.rbac -> notes.rbac {class: call}
+      stack.dispatch -> notes.dispatch {class: call}
+    }
+
+    anch: "" {
+      grid-columns: 3
+      grid-gap: 0
+      horizontal-gap: 0
+      vertical-gap: 0
+      style: {
+        fill: transparent
+        stroke: transparent
+        stroke-width: 0
+      }
+
+      f0: "" {class: space; width: 363; height: 7}
+      m: "" {class: space; width: 2; height: 2}
+      f1: "" {class: space; width: 364; height: 7}
+    }
+  }
+
+  bottom: "" {
+    grid-columns: 1
+    grid-gap: 8
+    vertical-gap: 0
+    style: {
+      fill: transparent
+      stroke: transparent
+      stroke-width: 0
+    }
+
+    upstream: "" {
+      class: green
+      width: 713
+      grid-columns: 1
+      grid-gap: 10
+      horizontal-gap: 0
+      vertical-gap: 11
+
+      title: "上游 MCP 服务" {class: title; width: 660; height: 36}
+
+      feed: "" {
+        grid-columns: 1
+        grid-gap: 0
+        horizontal-gap: 0
+        vertical-gap: 0
+        style: {
+          fill: transparent
+          stroke: transparent
+          stroke-width: 0
+        }
+
+        cli: "" {
+          style: {
+            fill: "#ffffff"
+            stroke: "#333333"
+            border-radius: 0
+          }
+          grid-columns: 2
+          grid-gap: 10
+          horizontal-gap: 10
+          vertical-gap: 8
+
+          ttl: |md
+              **orbitproxy CLI / SDK** · 提供连接通道  
+          | {
+            class: note
+            width: 500
+            height: 40
+          }
+          conv: "HTTP 转 MCP" {class: dashed-item; width: 160; height: 40}
+        }
+
+        anch: "" {
+          grid-columns: 4
+          grid-gap: 10
+          horizontal-gap: 10
+          vertical-gap: 0
+          style: {
+            fill: transparent
+            stroke: transparent
+            stroke-width: 0
+          }
+
+          a0: "" {class: space; width: 160; height: 2}
+          a1: "" {class: space; width: 160; height: 2}
+          a2: "" {class: space; width: 160; height: 2}
+          a3: "" {class: space; width: 160; height: 2}
+        }
+      }
+
+      body: "" {
+        grid-columns: 4
+        grid-gap: 10
+        horizontal-gap: 10
+        vertical-gap: 0
+        style: {
+          fill: transparent
+          stroke: transparent
+          stroke-width: 0
+        }
+
+        r0: "" {class: space; width: 160; height: 14}
+        stdio: "Stdio MCP" {class: item; width: 160; height: 40}
+        r1: "" {class: space; width: 160; height: 14}
+        remote: "Remote MCP" {class: item; width: 160; height: 40}
+        r2: "" {class: space; width: 160; height: 14}
+        stream: "Streamable MCP" {class: item; width: 160; height: 40}
+        r3: "" {class: space; width: 160; height: 14}
+        api: "HTTP API" {class: item; width: 160; height: 40}
+      }
+
+      feed.anch.a0 -> body.stdio {class: bypass}
+      feed.anch.a1 -> body.remote {class: bypass}
+      feed.anch.a2 -> body.stream {class: bypass}
+      feed.cli.conv -> body.api {class: bypass}
+
+      pad: "" {class: space; height: 5}
+    }
+  }
+}
+
+colR: "" {
+  grid-columns: 1
+  grid-gap: 12
+  style: {
+    fill: transparent
+    stroke: transparent
+    stroke-width: 0
+  }
+
+  spacer: "" {
+    height: 377
+    width: 10
+    style: {
+      fill: transparent
+      stroke: transparent
+      stroke-width: 0
+    }
+  }
+
+  observe: "可观测性" {
+    class: gray
+    grid-columns: 1
+    grid-gap: 8
+
+    incoming: "记录 Tool 调用请求" {class: item}
+    outgoing: "记录 Tool 响应结果" {class: item}
+    meta: "Tool, 参数, 耗时, 来源" {class: item}
+  }
+}
+
+colL.callers -> colL.gateway: "调用 Tool" {class: bypass}
+colL.gateway -> colR.observe: "旁路服务" {class: bypass}
+colL.gateway.anch.m -> colL.bottom.upstream: "自签CA 加密转发" {class: secure}

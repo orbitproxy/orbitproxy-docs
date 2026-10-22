@@ -1,78 +1,63 @@
 ---
 title: MCP 访问控制
-description: 按身份源授权 MCP Tools，并拦截敏感 SQL 或文件操作。
+description: 按访问密钥授权可调用的 MCP Endpoint 和 Tools，并限制 SQL 语句与文件操作。
 ---
 
-只让指定的 AI 客户端调用内网 MCP，并屏蔽高危 Tool（删除表数据、读取敏感文件、重启容器等）。未授权的 Tool 调用在网关被拦截，不会打到内网 MCP，上游 MCP 不用改。
+<PolicyTag scope="mcp" />
 
-这条规则只出现在 MCP 云端点上。
+MCP 访问控制策略按访问密钥授权调用方可以使用的 MCP Endpoint 和 Tools，并可进一步禁止指定类别的 SQL 语句和文件操作。未获授权的调用在网关终止，不会到达内网 MCP 服务，上游 MCP 服务无需修改。
 
 ## 配置参考
 
-这条策略在 MCP 调用到达网关时执行。
+### 执行阶段
+
+MCP 调用到达网关时执行。
 
 ### 配置字段
 
 <DocsTable>
-<table>
-  <thead>
-    <tr>
-      <th>字段</th>
-      <th>说明</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td>规则名称</td>
-      <td>这条规则在控制台里的名字</td>
-    </tr>
-    <tr>
-      <td>Endpoint</td>
-      <td>要锁定的 MCP Endpoint。规则只作用在选中的 Endpoint 上</td>
-    </tr>
-    <tr>
-      <td>身份源</td>
-      <td>发起调用的 AI 客户端身份。授权按身份源分别配置</td>
-    </tr>
-    <tr>
-      <td>Tools</td>
-      <td>该身份源允许调用的 Tool。没有勾选的 Tool 不能调用</td>
-    </tr>
-    <tr>
-      <td>敏感 SQL</td>
-      <td>按需拦截更新、删除、DDL 这几类 SQL</td>
-    </tr>
-    <tr>
-      <td>文件操作</td>
-      <td>按需拦截文件的读、写、移动</td>
-    </tr>
-  </tbody>
-</table>
+
+| 字段 | 说明 |
+| --- | --- |
+| 规则名称 | 规则的名称，用于区分同一云端点上的多条规则 |
+| 访问密钥 | 被授权的调用方，可选择一个或多个。访问密钥来自 [API 访问密钥](/docs/policy/api-key)策略中已创建的凭证，同一份授权可以同时授予多个访问密钥 |
+| Endpoint 权限 | 一组或多组授权，每一组针对一个 Connector，包含以下配置项 |
+
+</DocsTable>
+
+### Endpoint 权限
+
+<DocsTable>
+
+| 配置项 | 说明 |
+| --- | --- |
+| Connector | 被授权访问的 MCP Endpoint。同一条规则中，每个 Connector 只能出现一次 |
+| Tools | 允许调用的 Tool，至少选择一个。需要填写具体的 Tool 名称，不支持通配符 `*` |
+| 禁止的 SQL 语句 | 可选。选择需要禁止的语句类别：查询（`SELECT`）、插入（`INSERT` / `REPLACE`）、更新（`UPDATE`）、删除（`DELETE`）、DDL（`CREATE` / `ALTER` / `DROP`）。仅对 SQL 类 Connector 生效 |
+| 禁止的文件操作 | 可选。选择需要禁止的操作：读、写、移动。仅对文件系统类 Connector 生效 |
+| 开放路径 | 可选，路径前缀列表。配置后，文件操作涉及的路径必须位于其中某个前缀之下。仅对文件系统类 Connector 生效 |
+
 </DocsTable>
 
 ## 行为
 
-网关先确定这次调用来自哪个身份源，再按这条身份源的授权来判断。
+网关根据请求携带的访问密钥识别调用方，并依次进行以下判断。任一步骤不通过，请求在网关终止，不会进入内网 MCP 服务。
 
-- 调用的 Tool 在已勾选的 Tools 里，继续往后检查。
-- 调用的 Tool 没有被勾选，请求在网关结束，不会进入内网 MCP。
-- 勾选了敏感 SQL 或文件操作的拦截后，命中的调用同样在网关结束，即使这个 Tool 本身已被授权。
+1. 该访问密钥在目标 Connector 上没有授权，请求被拒绝。
+2. 调用的 Tool 不在授权的 Tools 中，请求被拒绝。
+3. 调用的是 SQL 类 Tool，且配置了禁止的 SQL 语句时，网关解析本次语句的类别。语句类别属于禁止的类别，或者无法识别、属于权限管理类时，请求被拒绝。
+4. 调用的是文件类 Tool，且配置了禁止的文件操作时，本次操作属于禁止的操作，请求被拒绝。配置了开放路径时，请求中的路径不在任何开放路径之下，同样被拒绝。
 
-只锁定已配置的 Endpoint。没有选中的 Endpoint，不受这条规则影响。
+全部通过的请求转发到内网 MCP 服务。
 
-## 在控制台怎么配
+### 其他限制
 
-1. 打开对应 MCP 云端点，切到 **流量策略**
-2. 展开 **MCP 访问控制**，点 **添加规则**
-3. 选要锁定的 **Endpoint** 和 **身份源**
-4. 勾选该身份源允许调用的 **Tools**
-5. 按需拦截敏感 SQL（更新 / 删除 / DDL）或文件操作（读 / 写 / 移动）
-6. 保存
+同一个访问密钥在同一个 Connector 上，只能存在一条启用状态的授权。重复授权会导致规则无法保存。
 
 ## 示例
 
-Endpoint 选内网 MySQL 的 MCP，身份源选某个 Cursor 客户端，Tools 只勾选查询类的 Tool，同时打开敏感 SQL 里的更新、删除和 DDL 拦截。
+访问密钥选择 `cursor-readonly`，Connector 选择内网 MySQL 的 MCP，Tools 只选择查询类的 `mysql_query`，禁止的 SQL 语句选择插入、更新、删除和 DDL。
 
-这个客户端发起的查询会转到内网 MCP。它调用没勾选的 Tool，或者发出 `DELETE`、`DROP` 这类语句，在网关就被拦下，内网 MCP 收不到。
+使用该访问密钥发起的查询语句转发到内网 MCP 服务。调用未授权的 Tool，或发出 `DELETE`、`DROP` 等语句时，请求在网关终止，内网 MCP 服务收不到该请求。
 
 场景见 [Agent 受控访问内网 MCP](/docs/mcp-gateway/use-cases/connect-internal)。

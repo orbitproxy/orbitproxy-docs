@@ -122,7 +122,7 @@ Server Key 会统一转成小写，并且必须以字母开头，只能包含字
 建议在分配公网地址之后立即完成以下配置，都可以在 Connector 的 **流量策略** 页签里完成：
 
 - [API 访问密钥](/docs/policy/api-key)：要求调用方携带密钥，没带或带错的请求在网关被拦截。
-- [MCP 访问控制](/docs/policy/mcp-access)：按身份源授权可调用的 Tools，并拦截敏感 SQL、文件操作等高危调用。
+- [MCP 访问控制](/docs/policy/mcp-access)：按访问密钥授权可调用的 Tools，并按语句类别、操作和路径限制 SQL 与文件操作。
 - [IP访问控制](/docs/policy/ip-access-control)：只允许可信来源访问这个入口。
 - [访问日志](/docs/policy/access-log)：记录每一次 Tool 调用，用于审计和排查。
 

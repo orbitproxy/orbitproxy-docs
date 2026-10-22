@@ -1,83 +1,136 @@
 ---
-title: 概览
+title: 概述
 ---
 
 import {
-  Atom,
   Binoculars,
+  CaretRight,
+  ChartLineUp,
   Graph,
+  Lightning,
   PlugsConnected,
   Rocket,
-  TerminalWindow,
+  ShieldCheck,
+  Wrench,
 } from "@phosphor-icons/react/dist/ssr"
 
-import { BilibiliPlayer } from "@/components/bilibili-player"
+orbitproxy 是一个集成网关平台，可以连接你任何位置（云主机， localhost, 企业内网环境, IOT等）的任何服务，并为其提供企业级安全网关的流量观测，访问控制，及流量编排能力。
 
-orbitproxy 是面向开发者和企业的基础设施， 为你的应用提供企业级安全策略和流量编排能力，无论服务部署在何处或者处于什么位置，我们都能帮你快速发布到公开网络中，<span className="docs-em">你只需要关注自身业务， 域名， 运维发布， 观测， 安全， 告警等上层能力 orbitproxy 帮你搞定</span>。
+使用 orbitproxy API 网关，你可以在没有安全运维团队且没有服务器域名的情况下快速发布你的产品(无论你的产品在本地笔记本还是内网环境)，也可以将 orbitproxy 作为你已有项目的流量入口（traffic door）去替代 nginx, caddy，traefik，envoyproxy 等需要繁琐配置的云原生网关
 
-orbitproxy 在AI领域同样提供企业级MCP解决方案， 可以帮助团队将AI Agent连接到任何位置的MCP服务，这使得你可以利用Cursor, Trae, Claude等任何AI Agent去快速处理各个服务器环境中的各类问题，同时提供<span className="docs-em">对AI的所有行为进行追踪， 高危操作拦截，敏感操作告警等能力</span>。
-
-<BilibiliPlayer framed />
+而 MCP 网关是 orbitproxy 用于管理对 MCP 服务器访问的解决方案。它充当 MCP 客户端和 MCP 服务器之间的保护机制，处理身份验证、提供访问控制和日志记录。
 
 ## 你可以用它做什么
 
-<div className="overview-grid">
-  <a className="overview-card" href="/docs/gateway/use-cases/traffic-entry">
-    <Rocket className="overview-card-icon" weight="regular" aria-hidden="true" />
-    <h3>把本地服务暴露到公网</h3>
-    <p>将内网和 localhost 上的 HTTP、TCP 服务发布到公网。</p>
-  </a>
-  <a className="overview-card" href="/docs/gateway/overview">
-    <Graph className="overview-card-icon" weight="regular" aria-hidden="true" />
-    <h3>API Gateway</h3>
-    <p>为你的任何服务提供企业级安全策略和负载策略，内网服务无需做任何代码变更即可快速集成 IP 访问控制，API Authorization，OAuth2.1，webhook 回调验证，流量限速等复杂流量处理能力，保证自身服务的高可用和高安全性。</p>
-  </a>
-  <a className="overview-card" href="/docs/mcp-gateway/overview">
-    <PlugsConnected className="overview-card-icon" weight="regular" aria-hidden="true" />
-    <h3>MCP 网关</h3>
-    <p>让本地 AI Agent 安全调用各云端环境的内网 MCP，并用 Composer 把一整套环境串成工作流；按身份源对 Agent 执行的 Tool 授权，并留下 AI 的完整调用可视化日志。</p>
-  </a>
-  <a className="overview-card" href="/docs/gateway/observability">
-    <Binoculars className="overview-card-icon" weight="regular" aria-hidden="true" />
-    <h3>全链路访问日志</h3>
-    <p>对进入你服务的所有请求进行追踪，提供完善的 HTTP 访问日志及回放日志，智能识别恶意攻击及异常请求并实时预警，在 AI 层面，可以为团队所有成员的 AI Agent 开启 MCP 调用追踪，AI 的每一次调用和行为都会被记录。</p>
-  </a>
+<div className="capability-list">
+  <details>
+    <summary>
+      <CaretRight className="capability-caret" weight="fill" aria-hidden="true" />
+      <Graph className="capability-icon" weight="regular" aria-hidden="true" />
+      <span>替代 nginx, caddy作为你任何服务的流量入口</span>
+    </summary>
+    <div className="capability-body">
+      <p>为你的任何服务提供企业级安全策略和负载策略，内网服务无需做任何代码变更即可快速集成 IP 访问控制，API Authorization，OAuth2.1，webhook 回调验证，流量限速等复杂流量处理能力，保证自身服务的高可用和高安全性。</p>
+      <p>
+        <a href="/docs/gateway/overview">查看这篇</a>
+      </p>
+    </div>
+  </details>
+  <details>
+    <summary>
+      <CaretRight className="capability-caret" weight="fill" aria-hidden="true" />
+      <Rocket className="capability-icon" weight="regular" aria-hidden="true" />
+      <span>快速分享 localhost, 内网服务到互联网</span>
+    </summary>
+    <div className="capability-body">
+      <p>将内网和 localhost 上的 HTTP、TCP 服务发布到公网。</p>
+      <p>
+        <a href="/docs/gateway/use-cases/traffic-entry">查看这篇</a>
+      </p>
+    </div>
+  </details>
+  <details>
+    <summary>
+      <CaretRight className="capability-caret" weight="fill" aria-hidden="true" />
+      <Wrench className="capability-icon" weight="regular" aria-hidden="true" />
+      <span>为你的产品或者服务快速开启维护模式并熔断请求</span>
+    </summary>
+    <div className="capability-body">
+      <p>不改代码、不停服务，在网关一键让生产环境进入维护熔断，向访问者展示维护页面。</p>
+      <p>
+        <a href="/docs/gateway/use-cases/maintenance-mode">查看这篇</a>
+      </p>
+    </div>
+  </details>
+  <details>
+    <summary>
+      <CaretRight className="capability-caret" weight="fill" aria-hidden="true" />
+      <Lightning className="capability-icon" weight="regular" aria-hidden="true" />
+      <span>本地 localhost开发时态接收微信支付等第三方 webhook回调</span>
+    </summary>
+    <div className="capability-body">
+      <p>让 localhost 和内网服务接收微信支付等第三方 webhook，并在网关校验签名后再转发。</p>
+      <p>
+        <a href="/docs/gateway/use-cases/wechat-webhook">查看这篇</a>
+      </p>
+    </div>
+  </details>
+  <details>
+    <summary>
+      <CaretRight className="capability-caret" weight="fill" aria-hidden="true" />
+      <ChartLineUp className="capability-icon" weight="regular" aria-hidden="true" />
+      <span>为你的站点快速开启访问追踪，访客日志，webhook回调历史记录等企业级观测能力</span>
+    </summary>
+    <div className="capability-body">
+      <p>对进入你服务的所有请求进行追踪，提供完善的 HTTP 访问日志及回放日志，智能识别恶意攻击及异常请求并实时预警。</p>
+      <p>
+        <a href="/docs/gateway/observability">查看这篇</a>
+      </p>
+    </div>
+  </details>
+  <details>
+    <summary>
+      <CaretRight className="capability-caret" weight="fill" aria-hidden="true" />
+      <Binoculars className="capability-icon" weight="regular" aria-hidden="true" />
+      <span>记录，观测个人和团队在使用AI Agent 时对MCP的每一次调用</span>
+    </summary>
+    <div className="capability-body">
+      <p>记录、监控和调试 AI 对 MCP 端点的每一次访问，团队成员的 Agent 调用不再是黑盒。</p>
+      <p>
+        <a href="/docs/mcp-gateway/observability">查看这篇</a>
+      </p>
+    </div>
+  </details>
+  <details>
+    <summary>
+      <CaretRight className="capability-caret" weight="fill" aria-hidden="true" />
+      <PlugsConnected className="capability-icon" weight="regular" aria-hidden="true" />
+      <span>帮助你的AI Agent 连接处于任何位置的 stdio 模式 MCP 服务</span>
+    </summary>
+    <div className="capability-body">
+      <p>在 MCP Gateway 上注册内网或 localhost 的 Stdio MCP，让 Cursor、Trae 等 AI Agent 安全访问，不必把数据库和密钥暴露到公网。</p>
+      <p>
+        <a href="/docs/mcp-gateway/use-cases/connect-internal">查看这篇</a>
+      </p>
+    </div>
+  </details>
+  <details>
+    <summary>
+      <CaretRight className="capability-caret" weight="fill" aria-hidden="true" />
+      <ShieldCheck className="capability-icon" weight="regular" aria-hidden="true" />
+      <span>为团队或者个人已有的MCP服务提供访问控制，高危 tool 识别拦截等安全能力</span>
+    </summary>
+    <div className="capability-body">
+      <p>按访问密钥授权允许调用的 Tools，并按语句类别、操作和路径限制 SQL 与文件操作，未授权调用不会进入内网。</p>
+      <p>
+        <a href="/docs/policy/mcp-access">查看这篇</a>
+      </p>
+    </div>
+  </details>
 </div>
 
-## 你或许还想了解
+## 后续步骤
 
-<div className="overview-grid-3">
-  <a className="overview-card overview-pill" href="/docs/cases/api/wechat-webhook">
-    <h3>localhost接受 微信支付 webhook 回调</h3>
-  </a>
-  <a className="overview-card overview-pill" href="/docs/cases/api/intranet-erp-cms">
-    <h3>公网访问内网ERP CMS或其他运营管理后台及各类 dashboard 服务</h3>
-  </a>
-  <a className="overview-card overview-pill" href="/docs/policy">
-    <h3>如何保证对外内网服务的安全性</h3>
-  </a>
-  <a className="overview-card overview-pill" href="/docs/cases/mcp/agent-ops">
-    <h3>AI Agent访问localhost/内网MCP服务</h3>
-  </a>
-  <a className="overview-card overview-pill" href="/docs/cases/webhook/access-log-replay">
-    <h3>webhook 请求重放</h3>
-  </a>
-  <a className="overview-card overview-pill" href="/docs/cases/api/localhost-api">
-    <h3>本地个人博客 / 站点公开访问</h3>
-  </a>
-</div>
-
-## 集成
-
-<div className="overview-grid">
-  <a className="overview-card" href="/docs/client/cli">
-    <TerminalWindow className="overview-card-icon" weight="regular" aria-hidden="true" />
-    <h3>客户端Cli</h3>
-    <p>orbitproxy 命令行参考。</p>
-  </a>
-  <a className="overview-card" href="/docs/integrate/sdk">
-    <Atom className="overview-card-icon" weight="regular" aria-hidden="true" />
-    <h3>SDK 接入</h3>
-    <p>在 Go 进程里直接建云端点。</p>
-  </a>
-</div>
+- [orbitproxy如何工作？](/docs/start/how-it-works)：看 orbitproxy 怎样把公网流量接到你的应用、API 和 MCP。
+- [如何安装使用orbitproxy](/docs/client/cli)：用 authtoken 注册这台机器，再用 run 启动客户端，把公网流量接到内网。
+- [如何找到我们](/docs/start/contact)：当你遇到任何问题时可以通过联系我们获取快速的技术支持，或有特殊需求时可以联系我们进行定制化服务。

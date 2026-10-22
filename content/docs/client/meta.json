@@ -1,5 +1,5 @@
 {
   "title": "orbitproxy 客户端",
   "defaultOpen": true,
-  "pages": ["cli"]
+  "pages": ["overview", "install", "cli", "how-it-works", "orbitproxy-directory", "security", "upgrade"]
 }

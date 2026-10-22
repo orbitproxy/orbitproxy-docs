@@ -1,4 +1,37 @@
 ---
-title: orbitproxy 网关如何工作？
-description: orbitproxy 如何把公网流量接到你的应用、API 和 MCP。
+title: orbitproxy 如何工作
+description: 了解orbitproxy的云网关和客户端如何协同工作来为你的应用程序提供企业级安全访问入口
 ---
+
+orbitproxy云端部署了一套名为 orbitproxy云网关的全球服务器网络，orbitproxy通过该网络来接收来自你客户，或者你的用户等其他公网访问请求流量，并对齐完成身份验证，流量过滤，清洗，恶意攻击屏蔽以后，将纯净的流量转发到部署在你内网环境中的 orbitproxy客户端，orbitproxy客户端再将流量转发给你的上游内网服务
+
+orbitproxy客户端是一个小型的类似 claude， copilot 的 CLI软件，该软件通过安全出站的持久化TLS加密连接主动连接到orbitproxy云网关，orbitproxy 云网关不像传统的反向代理那样转发IP地址，相反，当云网关接收到公网请求时，会将流量通过该TLS连接转发到orbitproxy客户端
+
+<Alert>
+orbitproxy高度重视用户数据安全以及用户隐私，相比于闭源的承诺，我们更愿意提供绝对的开源， 你可以在我们的 github 主仓中找到 orbitproxy-sdk 以及 orbitproxy 客户端的完整源代码， 并对其行任意 debug 或者解析，以确保部署在你内网的 orbitproxy 客户端满足你的安全合规需求，同时确保 orbitproxy 不会泄露以及读取你的敏感数据
+</Alert>
+
+- orbitproxy 客户端 github 仓库: https://github.com/orbitproxy/orbitproxy-machine
+- orbitproxy sdk github 仓库: https://github.com/orbitproxy/orbitproxy-go
+
+你可以选择将 orbitproxy 客户端按照你希望的形态进行运行和工作:
+
+1. 作为操作系统服务，将 orbitproxy 客户端作为操作系统服务运行，从而获得开机自启动和完整的挂后台运行权限， 这对生产环境项目非常有用
+2. 作为交互式CLI, 在临时分享或者测试期间，以前台命令行的形式运行 orbitproxy
+3. 作为嵌入到应用程序的sdk: 将 orbitproxy sdk 库直接安装到你的应用程序中
+
+### 网关代理和传统反向代理
+
+orbitproxy独特的架构相比传统的IP定向反向代理有几个重要优势:
+
+首先，这意味着你可以在任何地方运行你的服务——任何云平台（如 AWS 或 Azure）、任何应用程序平台（如 Heroku）、本地数据中心、家里的 Raspberry Pi，甚至你的笔记本电脑。
+
+其次，它允许 orbitproxy 提供入口无需任何网络配置。您无需处理 DNS、IP 地址、证书或端口等晦涩难懂的网络底层技术——这些配置都会推送到 orbitproxy 的云服务，一切都将自动为您处理。
+
+第三，orbitproxy 可以保护您免受攻击并强制执行身份验证，而无需担心有人可以通过发现您的上游 IP 地址来“绕过”orbitproxy。
+
+
+## 后续步骤
+
+- [了解orbitproxy API网关](/docs/gateway/overview)：看 API 网关怎样接管你的公网入口，经过安全策略、流量编辑和路由分发后转发到内网服务。
+- [了解orbitproxy MCP网关](/docs/mcp-gateway/overview)：看 MCP 网关怎样让 AI Agent 通过一个受控入口，安全、可审计地调用你的内网 MCP 服务。

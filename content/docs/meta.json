@@ -1,4 +1,4 @@
 {
   "title": "Docs",
-  "pages": ["index", "start", "gateway", "mcp-gateway", "policy", "client"]
+  "pages": ["index", "start", "gateway", "mcp-gateway", "client", "policy", "legal", "faq"]
 }

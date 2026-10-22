@@ -1,0 +1,446 @@
+direction: down
+
+vars: {
+  d2-config: {
+    layout-engine: elk
+    pad: 32
+    theme-overrides: {
+      N7: "#fdfdf7"
+    }
+  }
+}
+
+classes: {
+  gap: {
+    style: {
+      fill: transparent
+      stroke: transparent
+      stroke-width: 0
+    }
+  }
+  title: {
+    shape: rectangle
+    label.near: bottom-center
+    style: {
+      fill: transparent
+      stroke: transparent
+      stroke-width: 0
+      font-size: 15
+      bold: true
+      font-color: "#171717"
+    }
+  }
+  conn: {
+    shape: rectangle
+    height: 28
+    style: {
+      fill: transparent
+      stroke: transparent
+      stroke-width: 0
+      font-size: 13
+      bold: true
+      font-color: "#171717"
+    }
+  }
+  space: {
+    shape: rectangle
+    style: {
+      fill: transparent
+      stroke: transparent
+      stroke-width: 0
+    }
+  }
+  note: {
+    shape: rectangle
+    label.near: center-left
+    height: 40
+    style: {
+      fill: transparent
+      stroke: transparent
+      stroke-width: 0
+      font-size: 15
+      font-color: "#171717"
+    }
+  }
+  layer: {
+    height: 40
+    style: {
+      fill: "#ffffff"
+      stroke: "#333333"
+      border-radius: 0
+      font-size: 16
+      bold: true
+      font-color: "#171717"
+    }
+  }
+  item: {
+    height: 40
+    style: {
+      fill: "#ffffff"
+      stroke: "#333333"
+      border-radius: 0
+      font-size: 15
+      font-color: "#171717"
+    }
+  }
+  dashed-item: {
+    height: 40
+    style: {
+      fill: "#ffffff"
+      stroke: "#333333"
+      stroke-dash: 3
+      border-radius: 0
+      font-size: 15
+      font-color: "#171717"
+    }
+  }
+  sub: {
+    style: {
+      fill: "#ffffff"
+      stroke: "#333333"
+      border-radius: 0
+      font-size: 14
+      bold: true
+      font-color: "#171717"
+    }
+  }
+  orange: {
+    style: {
+      fill: "#ffe6cc"
+      stroke: "#d79b00"
+      border-radius: 0
+      font-size: 15
+      bold: true
+      font-color: "#171717"
+    }
+  }
+  blue: {
+    style: {
+      fill: "#dae8fc"
+      stroke: "#6c8ebf"
+      border-radius: 0
+      font-size: 15
+      bold: true
+      font-color: "#171717"
+    }
+  }
+  yellow: {
+    style: {
+      fill: "#fff2cc"
+      stroke: "#d6b656"
+      border-radius: 0
+      font-size: 15
+      bold: true
+      font-color: "#171717"
+    }
+  }
+  gray: {
+    style: {
+      fill: "#f5f5f5"
+      stroke: "#666666"
+      border-radius: 0
+      font-size: 15
+      bold: true
+      font-color: "#171717"
+    }
+  }
+  green: {
+    style: {
+      fill: "#d5e8d4"
+      stroke: "#82b366"
+      border-radius: 0
+      font-size: 15
+      bold: true
+      font-color: "#171717"
+    }
+  }
+  purple: {
+    style: {
+      fill: "#e1d5e7"
+      stroke: "#9673a6"
+      border-radius: 0
+      font-size: 15
+      bold: true
+      font-color: "#171717"
+    }
+  }
+  call: {
+    style: {
+      stroke: "#333333"
+      stroke-width: 1
+      font-size: 15
+      bold: true
+      font-color: "#171717"
+    }
+  }
+  bypass: {
+    style: {
+      stroke: "#333333"
+      stroke-width: 1
+      stroke-dash: 4
+      font-size: 15
+      bold: true
+      font-color: "#171717"
+    }
+  }
+  secure: {
+    style: {
+      stroke: "#00a64f"
+      stroke-width: 2
+      font-size: 14
+      bold: true
+      font-color: "#00a64f"
+    }
+  }
+}
+
+grid-columns: 2
+grid-gap: 40
+
+colL: "" {
+  grid-columns: 1
+  grid-gap: 36
+  vertical-gap: 72
+  style: {
+    fill: transparent
+    stroke: transparent
+    stroke-width: 0
+  }
+
+  callers: "公网调用方\n\n如：浏览器、Webhook 回调、API 请求、数据回传上报等" {
+    class: orange
+    height: 100
+  }
+
+  gateway: "" {
+    class: blue
+    grid-columns: 1
+    grid-gap: 8
+    horizontal-gap: 0
+    vertical-gap: 4
+
+    title: "orbitproxy API Gateway" {
+      class: title
+      width: 720
+      height: 43
+    }
+
+    body: "" {
+      grid-columns: 2
+      grid-gap: 8
+      horizontal-gap: 24
+      vertical-gap: 4
+      style: {
+        fill: transparent
+        stroke: transparent
+        stroke-width: 0
+      }
+
+      stack: "" {
+        width: 294
+        grid-columns: 1
+        grid-gap: 8
+        vertical-gap: 4
+        style: {
+          fill: transparent
+          stroke: transparent
+          stroke-width: 0
+        }
+
+          entry: "入口网关层" {
+            class: layer
+            height: 44
+          }
+          c0: "next" {class: conn}
+          security: "安全策略层" {
+            class: layer
+            height: 108
+          }
+          c1: "next" {class: conn}
+          edit: "流量编辑层" {
+            class: layer
+            height: 60
+          }
+          c2: "next" {class: conn}
+          dispatch: "路由分发层" {
+            class: layer
+            height: 44
+          }
+
+          entry -- c0 {class: call}
+          c0 -> security {class: call}
+          security -- c1 {class: call}
+          c1 -> edit {class: call}
+          edit -- c2 {class: call}
+          c2 -> dispatch {class: call}
+      }
+
+      notes: "" {
+        grid-columns: 1
+        grid-gap: 8
+        vertical-gap: 4
+        style: {
+          fill: transparent
+          stroke: transparent
+          stroke-width: 0
+        }
+
+          entry: |md
+              提供公网域名 · TLS 终止 · 按域名匹配云端点  
+          | {
+            class: note
+            width: 290
+            height: 44
+          }
+          n0: "" {class: space; height: 28}
+          security: |md
+              集成 WAF · 实时巡检  
+              IP / 地域访问限制 · BasicAuth · OAuth 认证  
+              API Key 等数十种企业级安全策略  
+              防护恶意攻击和钓鱼扫描请求  
+          | {
+            class: note
+            width: 290
+            height: 108
+          }
+          n1: "" {class: space; height: 28}
+          edit: |md
+              允许用户自定义异常 · 重写 Header、Host  
+              过滤 Body 等流量转换行为  
+          | {
+            class: note
+            width: 290
+            height: 60
+          }
+          n2: "" {class: space; height: 28}
+          dispatch: |md
+              负载均衡 · 健康检查 · 内网服务转发  
+          | {
+            class: note
+            width: 290
+            height: 44
+          }
+      }
+
+      stack.entry -> notes.entry {class: call}
+      stack.security -> notes.security {class: call}
+      stack.edit -> notes.edit {class: call}
+      stack.dispatch -> notes.dispatch {class: call}
+    }
+
+    anch: "" {
+      grid-columns: 5
+      grid-gap: 0
+      horizontal-gap: 0
+      vertical-gap: 0
+      style: {
+        fill: transparent
+        stroke: transparent
+        stroke-width: 0
+      }
+
+      f0: "" {class: space; width: 115; height: 7}
+      l: "" {class: space; width: 2; height: 2}
+      f1: "" {class: space; width: 350; height: 7}
+      r: "" {class: space; width: 2; height: 2}
+      f2: "" {class: space; width: 260; height: 7}
+    }
+  }
+
+  bottom: "" {
+    grid-columns: 1
+    grid-gap: 8
+    vertical-gap: 0
+    style: {
+      fill: transparent
+      stroke: transparent
+      stroke-width: 0
+    }
+
+    pair: "" {
+      grid-columns: 2
+      grid-gap: 0
+      horizontal-gap: 8
+      vertical-gap: 0
+      style: {
+        fill: transparent
+        stroke: transparent
+        stroke-width: 0
+      }
+
+      localhost: "" {
+        class: purple
+        width: 200
+        grid-columns: 1
+        grid-gap: 10
+        vertical-gap: 11
+
+        title: "Localhost" {class: title; width: 140; height: 36}
+        cli: "客户端 CLI" {class: item; height: 38}
+        c0: "内网转发" {class: conn}
+        lan: "内网 127.0.0.1" {class: item; height: 39}
+        pad: "" {class: space; height: 1}
+
+        cli -- c0 {class: bypass}
+        c0 -> lan {class: bypass}
+      }
+
+      vpc: "" {
+        class: green
+        width: 489
+        grid-columns: 1
+        grid-gap: 10
+        vertical-gap: 11
+
+        title: "生产环境 VPC" {class: title; width: 315; height: 36}
+        front: "前端服务" {class: item}
+
+        back: "后端服务" {
+          class: sub
+          grid-columns: 2
+          grid-gap: 8
+
+          logic: "业务逻辑" {class: item}
+          sdk: "集成 orbitproxy sdk" {class: item}
+        }
+
+        pad: "" {class: space; height: 1}
+      }
+    }
+  }
+}
+
+colR: "" {
+  grid-columns: 1
+  grid-gap: 12
+  style: {
+    fill: transparent
+    stroke: transparent
+    stroke-width: 0
+  }
+
+  spacer: "" {
+    height: 356
+    width: 10
+    style: {
+      fill: transparent
+      stroke: transparent
+      stroke-width: 0
+    }
+  }
+
+  observe: "可观测性" {
+    class: gray
+    grid-columns: 1
+    grid-gap: 8
+
+    incoming: "记录 Incoming request" {class: item}
+    outgoing: "记录 send response" {class: item}
+    meta: "metadata, body, headers" {class: item}
+  }
+}
+
+colL.callers -> colL.gateway: "发起请求" {class: bypass}
+colL.gateway -> colR.observe: "旁路服务" {class: bypass}
+colL.gateway.anch.l -> colL.bottom.pair.localhost: "自签CA 加密转发" {class: secure}
+colL.gateway.anch.r -> colL.bottom.pair.vpc: "自签CA 加密转发" {class: secure}

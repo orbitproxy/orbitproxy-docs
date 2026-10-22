@@ -7,73 +7,32 @@ orbitproxy 提供一套用于生产环境的流量策略体系来允许用户过
 
 我们可以把流量的入和出看做是一个请求的完整生命周期， 当一个请求打到 orbitproxy 云网关时，这个请求的生命周期开始， 当请求从云网关到用户内网再回复响应， 最终云网关对外回复响应式， 这个请求的生命周期结束， 在生命周期中，我们在各个节点埋下Hook,  如Incomming Request(请求到达网关时)  ,Sending Response(请求返回响应时)，而流量策略就是工作在每个 hook 中的插件函数， 他深入到一次请求的每一个生命周期节点，来保证流量的安全和细粒度的控制，使用流量策略，你可以得到：
 
-- 验证进入网关的流量是否是受允许的， 拒绝恶意流量， 重写Host URL, 或在内网服务不便时要求网关响应通用页面（如[系统维护中](/docs/policy/custom-response)）
-- 决定流量该如何转发以及观测，如在Incomming Request 节点中记录请求上下文信息， 在Sending Response节点中记录响应上下文信息，以便后续在平台[实时查看请求细节](/docs/observe/access-logs)
-- QPS限速，修改请求头响应头等常规策略也都在对应策略节点中提供完善支持
+- 验证进入网关的流量是否是受允许的，拒绝恶意流量，或在内网服务不便时要求网关响应通用页面（如[系统维护中](/docs/policy/custom-response)）
+- 决定流量该如何转发以及观测，如在 Incomming Request 节点中记录请求上下文信息，在 Sending Response 节点中记录响应上下文信息，以便后续通过[访问日志](/docs/policy/access-log)查看请求细节
+- 修改请求头响应头等常规策略也都在对应策略节点中提供完善支持
 
 未来我们还将计划公开 gateway 的生命周期开发文档，允许用户自定义流量策略插件
 
 ## 对外开放流量策略列表
 
+每一项策略都有独立的配置参考页面，包含配置字段、行为和示例。适用范围标识该策略可用于哪类网关。
+
 <DocsTable>
-<table>
-  <thead>
-    <tr>
-      <th>能力</th>
-      <th>状态</th>
-      <th>做什么</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td><a href="/docs/policy/ip-access-control">IP 访问控制</a></td>
-      <td>可用</td>
-      <td>按来源 IP / CIDR 建白名单或黑名单。白名单只放行名单内的调用方，黑名单拦掉已知恶意来源；未通过的请求在网关直接拒绝，不会打到内网</td>
-    </tr>
-    <tr>
-      <td><a href="/docs/policy/basic-auth">BasicAuth 基础鉴权</a></td>
-      <td>可用</td>
-      <td>要求调用方带上用户名和密码（浏览器会弹出原生鉴权框）。没带对凭证的请求在网关被拦下，适合演示环境、管理后台或 NAS 入口</td>
-    </tr>
-    <tr>
-      <td><a href="/docs/policy/api-key">API 访问密钥</a></td>
-      <td>可用</td>
-      <td>给联调方或下游服务签发可撤销的密钥。调用方必须在指定请求头（默认 `x-api-key`）里带上合法 Key，没带或带错的请求在网关被拦截</td>
-    </tr>
-    <tr>
-      <td><a href="/docs/policy/http-header">添加/移除HTTP Header</a></td>
-      <td>可用</td>
-      <td>在转发前给请求补标识，或在出网前拿掉不该暴露的头；也可以给响应追加 CORS 等字段。上游不用改代码</td>
-    </tr>
-    <tr>
-      <td><a href="/docs/policy/custom-response">自定义响应</a></td>
-      <td>可用</td>
-      <td>按规则在网关直接返回指定状态码和页面（例如系统维护中），或只改状态码并透传上游内容，内网服务不用改、也不必上线</td>
-    </tr>
-    <tr>
-      <td><a href="/docs/policy/access-log">访问日志</a></td>
-      <td>可用</td>
-      <td>记录经过网关的访问日志，便于排查调用和审计行为。</td>
-    </tr>
-    <tr>
-      <td>Host 改写</td>
-      <td>可用</td>
-      <td>转发前改写 Host，适配按 Host 路由或校验的上游服务。</td>
-    </tr>
-    <tr>
-      <td><a href="/docs/policy/webhook-verify">webhook回调验证</a></td>
-      <td>可用</td>
-      <td>只出现在 webhook 云端点。网关按身份源校验第三方回调签名，通过后再转发；没过的请求不会打到上游</td>
-    </tr>
-  </tbody>
-</table>
+
+| 策略 | 适用范围 | 说明 |
+| --- | --- | --- |
+| [IP访问控制](/docs/policy/ip-access-control) | <PolicyTag scope="common" inline /> | 按来源 IP 或网段建立白名单或黑名单，未通过的请求在网关直接拒绝，不会到达内网服务 |
+| [BasicAuth 基础鉴权](/docs/policy/basic-auth) | <PolicyTag scope="api" inline /> | 要求调用方提供用户名和密码，凭证不正确的请求返回 401 |
+| [API 访问密钥](/docs/policy/api-key) | <PolicyTag scope="common" inline /> | 要求请求在指定请求头中携带可撤销的访问密钥，未携带或不正确的请求在网关被拦截 |
+| [添加/移除HTTP Header](/docs/policy/http-header) | <PolicyTag scope="api" inline /> | 在转发前后追加或移除请求头和响应头，上游服务无需修改代码 |
+| [自定义响应](/docs/policy/custom-response) | <PolicyTag scope="api" inline /> | 按状态码替换网关返回的系统异常页面，或透传上游的原始响应 |
+| [访问日志](/docs/policy/access-log) | <PolicyTag scope="common" inline /> | 按采集级别记录经过云端点的请求，便于排查调用和审计行为 |
+| [Webhook 验证](/docs/policy/webhook-verify) | <PolicyTag scope="api" inline /> | 校验第三方 webhook 回调的来源后，再转发到内网服务 |
+| [MCP 访问控制](/docs/policy/mcp-access) | <PolicyTag scope="mcp" inline /> | 按访问密钥授权可调用的 MCP Endpoint 和 Tools，并限制 SQL 语句与文件操作 |
+
 </DocsTable>
 
-## 使用场景
+## 后续步骤
 
-- 使用访问控制来保证云端点的受控访问
-- 为生产环境云端点快速开启维护模式
-- 为云端点设置QPS限速来防止恶意请求刷API导致内网服务被击穿
-- 一键为云端点快速配置 CORS等常用请求头
-- [使用 orbitproxy gateway 来替代 clickhouse, elk, loki等日志观测组件](/docs/cases/access-logs)
-- [为 webhook 端点开启访问日志以及执行 webhook 重放能力](/docs/cases/webhook/access-log-replay)
+- [为你的服务追加IP访问控制或基本身份验证](/docs/policy/ip-access)
+- [快速让生产环境服务进入维护熔断模式](/docs/gateway/use-cases/maintenance-mode)

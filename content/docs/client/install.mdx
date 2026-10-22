@@ -1,0 +1,160 @@
+---
+title: 安装指引
+description: 安装并启动 orbitproxy 客户端，把本地或内网服务发布到公网。
+---
+
+按下面的步骤依次完成客户端的安装、认证、启动，并添加第一个云端点。如果你想把 orbitproxy 直接嵌入自己的项目，请直接看[使用 SDK 接入](#使用-sdk-接入)。
+
+## 安装客户端
+
+orbitproxy 客户端是一个没有运行时依赖的命令行程序，请按你的操作系统选择安装方式。
+
+### macOS
+
+1. 打开[下载页](https://dashboard.app.orbitproxy.cloud/install)，选择 macOS，并按你的芯片选择版本：Apple Silicon（M1 / M2 / M3 / M4 等）或 Intel。不确定时可以在「关于本机」里查看芯片信息。
+2. 在终端中把压缩包解压到 `~/.orbitproxy/bin`：
+
+```bash
+mkdir -p ~/.orbitproxy/bin && tar -xvzf ~/Downloads/orbitproxy.tar.gz -C ~/.orbitproxy/bin
+```
+
+<Alert type="warning">
+不要使用 sudo，也不要解压到 /usr/local/bin，否则客户端在线更新时没有写权限。
+</Alert>
+
+### Linux
+
+在终端运行安装脚本。脚本会自动识别架构，并把客户端安装到 `~/.orbitproxy/bin/orbitproxy`：
+
+```bash
+curl -fsSL https://dashboard.app.orbitproxy.cloud/install.sh | bash
+```
+
+如果你想手动安装，可以在[下载页](https://dashboard.app.orbitproxy.cloud/install)选择 Linux 版本，再解压到 `~/.orbitproxy/bin`。运行 `uname -m` 可以确认架构：显示 x86_64 选择 x86_64，显示 aarch64 或 arm64 选择 arm64。
+
+```bash
+mkdir -p ~/.orbitproxy/bin && tar -xvzf ~/Downloads/orbitproxy.tar.gz -C ~/.orbitproxy/bin
+```
+
+### Windows
+
+1. 打开[下载页](https://dashboard.app.orbitproxy.cloud/install)，下载 Windows 版（x64）压缩包。
+2. 右键 orbitproxy.zip，选择「全部解压缩」。
+
+<img src="/install/windows-zip-all.png" alt="右键压缩包点击全部解压缩" className="docs-shot" />
+
+3. 右键 orbitproxy.exe，选择「以管理员身份运行」。
+
+<img src="/install/windows-runas-admin.png" alt="以管理员身份运行" className="docs-shot" />
+
+## 完成客户端认证
+
+使用你账户的 authtoken 注册这台机器，把下面命令里的 `<YOUR_AUTHTOKEN>` 替换成你自己的 authtoken：
+
+<DocsCodeTabs tabs={[{ label: "macOS / Linux" }, { label: "Windows" }]}>
+
+```bash
+cd ~/.orbitproxy/bin
+./orbitproxy authtoken <YOUR_AUTHTOKEN>
+```
+
+```powershell
+.\orbitproxy.exe authtoken <YOUR_AUTHTOKEN>
+```
+
+</DocsCodeTabs>
+
+## 启动客户端
+
+### 前台启动
+
+在终端里直接运行客户端，适合临时分享或测试：
+
+<DocsCodeTabs tabs={[{ label: "macOS / Linux" }, { label: "Windows" }]}>
+
+```bash
+cd ~/.orbitproxy/bin
+./orbitproxy run
+```
+
+```powershell
+.\orbitproxy.exe run
+```
+
+</DocsCodeTabs>
+
+### 后台运行
+
+把客户端注册为系统服务，关掉终端后它仍会在后台运行，并且开机自启动，适合生产环境。macOS 和 Linux 需要使用 sudo，Windows 需要以管理员身份运行：
+
+<DocsCodeTabs tabs={[{ label: "macOS / Linux" }, { label: "Windows" }]}>
+
+```bash
+sudo ~/.orbitproxy/bin/orbitproxy service install
+sudo ~/.orbitproxy/bin/orbitproxy service start
+```
+
+```powershell
+.\orbitproxy.exe service install
+.\orbitproxy.exe service start
+```
+
+</DocsCodeTabs>
+
+## 添加 HTTP/TCP 云端点
+
+用 `orbitproxy proxy add` 把本地 HTTP / TCP 服务映射出去，协议推荐选择 HTTPS。下面的例子把本机 3000 端口的服务发布出去：
+
+<DocsCodeTabs tabs={[{ label: "macOS / Linux" }, { label: "Windows" }]}>
+
+```bash
+cd ~/.orbitproxy/bin
+./orbitproxy proxy add --type api_gateway --protocol https --port 3000
+```
+
+```powershell
+.\orbitproxy.exe proxy add --type api_gateway --protocol https --port 3000
+```
+
+</DocsCodeTabs>
+
+## 使用 SDK 接入
+
+除了命令行客户端，你也可以把 orbitproxy 直接嵌入到自己的项目里。目前提供 Golang SDK。
+
+安装 SDK：
+
+```bash
+go get github.com/orbitproxy/orbitproxy-go
+```
+
+在应用中接入：
+
+```go title="main.go"
+package main
+
+import (
+	"context"
+	"log"
+
+	"github.com/orbitproxy/orbitproxy-go"
+)
+
+func main() {
+	svc, err := orbitproxy.Connect(context.Background(), orbitproxy.Options{
+		// 在生产环境中建议根据项目规范使用 .env 或者环境变量的形式注入密钥信息
+		AuthToken:  "YOUR_AUTHTOKEN",
+		MachineKey: "YOUR_MACHINE_KEY",
+		APIURL:     "https://cp.app.orbitproxy.cloud",
+	})
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer svc.Close()
+
+	log.Println("connected:", svc.MachineKey())
+	select {}
+}
+```
+
+还没有 Machine Key？可以通过创建 SDK Client 获得，[立即去创建](https://dashboard.app.orbitproxy.cloud/sdk-clients)。

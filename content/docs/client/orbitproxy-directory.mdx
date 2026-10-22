@@ -1,0 +1,229 @@
+---
+title: 了解 .orbitproxy 目录
+---
+
+orbitproxy 客户端在本机产生的全部数据均存放在同一目录下，该目录称为数据根目录，默认位于当前用户家目录下的 `.orbitproxy`。macOS 和 Linux 上为 `~/.orbitproxy`，Windows 上为 `C:\Users\<用户名>\.orbitproxy`。
+
+所有命令均支持 `--workdir <路径>` 参数，用于指定其他目录作为数据根目录。使用 SDK 的 Go 应用默认采用相同的目录结构。
+
+## 目录结构
+
+```text title="~/.orbitproxy"
+~/.orbitproxy/
+├── bin/
+│   └── orbitproxy              # 客户端程序，Windows 上为 orbitproxy.exe
+├── default                     # 默认操作的机器
+├── last-machine                # 登出时保留，用于下次登录时恢复机器
+├── pending-login.json          # 尚未完成的浏览器登录
+└── <machineKey>/               # 每台机器对应一个目录
+    ├── orbitproxy.yml          # 机器身份与云网关地址
+    ├── orbitproxy.lock         # 运行锁
+    ├── endpoints.json          # 当前端点快照，仅在客户端运行期间存在
+    ├── mcp-runtime.env         # 安装系统服务时记录的运行环境
+    ├── exec_pids.json          # Stdio MCP 子进程记录
+    ├── env/
+    │   └── <endpointID>.env    # Stdio MCP 的环境变量文件
+    └── logs/
+        ├── orbitproxy.log      # 运行日志
+        └── background.out      # 后台运行时的标准输出
+```
+
+其中部分文件仅在特定条件下产生：未创建 Stdio MCP 端点时不存在 `env/` 和 `exec_pids.json`；未安装系统服务时不存在 `mcp-runtime.env`。
+
+## 数据根目录
+
+<DocsTable>
+<table>
+  <thead>
+    <tr>
+      <th>路径</th>
+      <th>说明</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>bin/</code></td>
+      <td>客户端程序。安装脚本和手动安装均将程序放置于此目录，客户端在线升级时也会替换该目录下的程序。因此该目录需要保持当前用户可写，不应使用 <code>/usr/local/bin</code> 等需要管理员权限才能写入的位置。</td>
+    </tr>
+    <tr>
+      <td><code>default</code></td>
+      <td>内容为一个 machine key，由 <code>orbitproxy login</code> 登录成功后写入。数据根目录下存在多台机器时，命令以该文件指定的机器作为默认操作对象。</td>
+    </tr>
+    <tr>
+      <td><code>last-machine</code></td>
+      <td>执行 <code>orbitproxy logout</code> 时写入，内容为被登出机器的 machine key。仅在下次执行 <code>login</code> 时使用，用于向云端申请恢复同一台机器，该机器已有的分享和域名因此得以保留。</td>
+    </tr>
+    <tr>
+      <td><code>pending-login.json</code></td>
+      <td>执行 <code>orbitproxy login</code> 后、浏览器确认完成前的临时文件，内容包括设备授权码、确认链接、过期时间，以及本次登录生成的密钥。浏览器确认完成后，由 <code>orbitproxy status</code> 取回授权结果并完成登录。登录完成、被拒绝或已过期时，该文件会被自动删除。</td>
+    </tr>
+  </tbody>
+</table>
+</DocsTable>
+
+命令确定操作对象的优先级依次为：`--machine-key` 参数、`default` 文件、数据根目录下唯一的一台机器。存在多台机器且没有 `default` 文件时，命令报错并要求通过 `--machine-key` 显式指定。
+
+## 机器目录
+
+每台已注册的机器对应一个以 machine key 命名的目录，目录权限仅允许当前用户访问。
+
+### orbitproxy.yml
+
+机器身份文件，客户端运行的必要条件。文件不存在或缺少必填字段（`machine_key`、`private_key_pem`、`edge_addr`、`machine_ca_cert`）时，客户端启动失败，并在错误信息中列出缺失的字段。
+
+```yaml title="orbitproxy.yml"
+machine_key: <machineKey>
+type: cli
+edge_addr: <云网关地址>
+machine_ca_cert: |
+  -----BEGIN CERTIFICATE-----
+  ...
+public_key_pem: |
+  -----BEGIN PUBLIC KEY-----
+  ...
+private_key_pem: |
+  -----BEGIN PRIVATE KEY-----
+  ...
+logger:
+  level: info
+```
+
+<DocsTable>
+<table>
+  <thead>
+    <tr>
+      <th>字段</th>
+      <th>说明</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>machine_key</code></td>
+      <td>机器在 orbitproxy 中的唯一标识。</td>
+    </tr>
+    <tr>
+      <td><code>type</code></td>
+      <td>客户端类型，命令行客户端为 <code>cli</code>。</td>
+    </tr>
+    <tr>
+      <td><code>edge_addr</code></td>
+      <td>客户端连接的云网关地址，注册时由云端下发。</td>
+    </tr>
+    <tr>
+      <td><code>machine_ca_cert</code></td>
+      <td>用于校验云网关证书的 CA 证书，注册时由云端下发。</td>
+    </tr>
+    <tr>
+      <td><code>public_key_pem</code>、<code>private_key_pem</code></td>
+      <td>注册时在本机生成的密钥对。私钥仅保存于该文件，用于对每次连接的握手消息签名。</td>
+    </tr>
+    <tr>
+      <td><code>logger.level</code></td>
+      <td>日志级别，可选值为 <code>debug</code>、<code>info</code>、<code>warn</code>、<code>error</code>，默认值为 <code>info</code>。修改后需重启客户端生效，排查问题时可临时调整为 <code>debug</code>。</td>
+    </tr>
+  </tbody>
+</table>
+</DocsTable>
+
+该文件包含私钥，应按凭据级别保管，禁止提交至代码仓库或以任何形式传递给他人。除 `logger.level` 外，其余字段均由客户端在注册时生成，无需手动修改。
+
+文件丢失后，可通过 `orbitproxy authtoken <token> --machine-key <machineKey>` 恢复同一台机器。
+
+### orbitproxy.lock
+
+运行锁文件。客户端运行期间持有该锁，并记录当前进程号和运行方式（前台、后台或系统服务），`orbitproxy status` 通过读取该文件展示进程信息。
+
+同一台机器同一时间仅允许一个进程持有该锁，因此前台运行、后台运行和系统服务三者互斥。进程退出后锁自动释放，锁文件本身可以保留。
+
+### endpoints.json
+
+客户端运行期间写入的端点快照，记录各端点的 ID、本机地址及对应的公网地址。客户端启动时清除上一次异常退出遗留的快照，正常退出时同样将其删除，因此该文件仅在客户端运行期间存在。文件由客户端维护，不应手动编辑。
+
+### mcp-runtime.env
+
+执行 `service install` 时写入，记录安装服务的用户的 `HOME`、`PATH` 以及 `npm root -g` 的输出。
+
+操作系统服务的运行环境通常不继承用户终端的环境变量。缺少该记录时，客户端无法定位通过 `npm`、`uv` 安装的 MCP 服务。客户端启动 Stdio MCP 时，将依据该记录查找可执行程序和全局安装的依赖包。
+
+升级 Node.js 或调整 `npm` 全局目录后，需重新安装服务以更新该文件：
+
+```bash
+sudo orbitproxy service uninstall && sudo orbitproxy service install
+```
+
+### exec_pids.json
+
+客户端启动的 Stdio MCP 子进程记录，包含各进程的进程号和启动时间。客户端被强制终止时，子进程可能残留；客户端下次启动时，将依据该记录清理这些残留进程。
+
+### env/&lt;endpointID&gt;.env
+
+Stdio MCP 端点的环境变量文件。数据库账号密码等敏感配置应存放于此：客户端仅在启动 MCP 进程时读取该文件，并将其合并到该进程的环境变量中，其内容不会上报至 orbitproxy，也不会暴露给 AI Agent。
+
+文件格式为每行一条 `KEY=VALUE`。空行及以 `#` 开头的行将被忽略，支持 `export KEY=VALUE` 写法，值可使用单引号或双引号包裹。与进程已有的同名变量冲突时，以该文件中的值为准。
+
+```bash
+mkdir -p ~/.orbitproxy/<machineKey>/env
+cat > ~/.orbitproxy/<machineKey>/env/<endpointID>.env <<'EOF'
+MYSQL_HOST=127.0.0.1
+EOF
+chmod 600 ~/.orbitproxy/<machineKey>/env/<endpointID>.env
+```
+
+所需变量及文件路径以控制中心预检结果中的提示为准，提示中的路径已替换为该机器上的实际路径。服务依赖环境变量而该文件不存在时，预检将提示环境变量缺失。
+
+### logs/
+
+`orbitproxy.log` 为客户端运行日志，格式为可检索的纯文本，记录连接、重连、端点变更及错误信息。单个日志文件达到 50 MB 时自动轮转，保留 7 天，不压缩。前台运行时终端展示的是状态面板，面板中的连接与重连事件同样记录于该日志。
+
+`background.out` 仅在使用 `orbitproxy run --background` 运行时产生，内容为后台进程的标准输出和标准错误。该文件以追加方式写入，不会自动轮转，长期后台运行时需关注其体积。
+
+## 系统服务
+
+通过 `sudo orbitproxy service install` 安装系统服务时，服务读取的是安装用户自己的 `.orbitproxy` 目录，而非 root 用户的目录。客户端通过 `SUDO_USER` 确定安装用户的家目录，服务进程也以该用户的身份运行，仅注册服务这一步需要管理员权限。
+
+服务文件不位于 `.orbitproxy` 目录内，配置文件也不会被复制到 `/etc`：
+
+- macOS：`/Library/LaunchDaemons/com.orbitproxy.machine.plist`
+- Linux：`/etc/systemd/system/orbitproxy.service`
+- Windows：名为 `OrbitProxy` 的系统服务
+
+## 清理
+
+清理本地数据应使用客户端提供的命令，不建议直接删除 `.orbitproxy` 目录。系统服务或后台进程仍在运行时，它们可能持有目录下的文件。下列命令会先停止客户端和系统服务，再执行清理：
+
+<DocsTable>
+<table>
+  <thead>
+    <tr>
+      <th>命令</th>
+      <th>行为</th>
+      <th>云端端点与域名</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>orbitproxy logout</code></td>
+      <td>使云端该机器的密钥失效，停止后台客户端，删除该机器的 <code>&lt;machineKey&gt;/</code> 目录，并写入 <code>last-machine</code></td>
+      <td>保留</td>
+    </tr>
+    <tr>
+      <td><code>orbitproxy reset</code></td>
+      <td>停止客户端和系统服务，删除数据根目录下除 <code>bin/</code> 以外的全部内容，保留客户端程序</td>
+      <td>保留</td>
+    </tr>
+    <tr>
+      <td><code>orbitproxy delete</code></td>
+      <td>在 <code>reset</code> 的基础上同时删除 <code>bin/</code> 下的客户端程序。该操作不可撤销，需重新安装后才能再次使用</td>
+      <td>保留</td>
+    </tr>
+  </tbody>
+</table>
+</DocsTable>
+
+已安装系统服务时，`reset` 和 `delete` 需要管理员权限，因为二者需先卸载服务。为避免误删，未指定 `--workdir` 时，这两个命令仅处理名为 `.orbitproxy` 的目录，拒绝删除家目录及其他目录。
+
+## 后续步骤
+
+- [orbitproxy cli](/docs/client/cli)：查看所有命令和参数。
+- [客户端工作原理](/docs/client/how-it-works)：了解会话、端点和重连机制。
+- [客户端架构安全性](/docs/client/security)：了解客户端的身份认证与加密连接。

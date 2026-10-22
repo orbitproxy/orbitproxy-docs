@@ -15,12 +15,12 @@ export const SITE_OG_IMAGE = "/logo-mark-200.png"
  * 这里补的是没有 description 的页面，避免页面正文顶部多出一行重复的简介。
  */
 const SEO_DESCRIPTIONS: Record<string, string> = {
+  "/docs/client/overview":
+    "orbitproxy 客户端：命令行客户端与 SDK 客户端如何通过一条出站加密连接把内网和本地服务接入云网关，涵盖会话、重连、运行方式与本地文件。",
   "/docs/client/cli":
-    "orbitproxy 命令行客户端参考：authtoken 注册机器、run 运行、status 查看状态、service 服务管理，以及 reset 与 delete 的用法和参数。",
+    "orbitproxy 命令行客户端参考：authtoken、login、run、proxy add、list、close、service 等全部命令与标志，以及 --json 输出格式和退出码。",
   "/docs/gateway/overview":
     "orbitproxy API 网关：把 localhost、内网和云主机上的 HTTP/TCP 服务发布到公网，并提供访问控制、认证鉴权、限速与全链路访问日志。",
-  "/docs/gateway/quickstart":
-    "3 分钟把 localhost 服务发布到公网：创建 orbitproxy 云端点并获得 HTTPS 访问地址的视频演示。",
   "/docs/gateway/endpoints":
     "了解 orbitproxy 云端点：持久在线的 HTTP/TCP 网关流量入口，涵盖基本概念、创建方式与日常管理，把公网请求安全转发到内网或本地服务。",
   "/docs/gateway/use-cases/traffic-entry":
@@ -35,8 +35,6 @@ const SEO_DESCRIPTIONS: Record<string, string> = {
     "为云端点同时配置 IP 访问控制和基本身份验证：只有受信任来源 IP 或持有有效凭据的请求才能访问，无需修改服务代码。",
   "/docs/mcp-gateway/overview":
     "orbitproxy MCP 网关：连接任何位置、任何形态的 MCP 服务，为 AI Agent 提供统一认证鉴权、访问控制、高危操作拦截与全链路调用追踪。",
-  "/docs/mcp-gateway/quickstart":
-    "3 分钟让 Cursor 通过 orbitproxy MCP Gateway 连接内网 MySQL MCP 服务的视频演示。",
   "/docs/mcp-gateway/connector":
     "MCP Connector 把各个环境的 MCP 服务注册到 orbitproxy MCP Gateway：内部 Connector 仅供 Composer 聚合，公开 Connector 拥有 HTTPS 公网地址。",
   "/docs/mcp-gateway/use-cases/connect-internal":
@@ -44,7 +42,8 @@ const SEO_DESCRIPTIONS: Record<string, string> = {
 }
 
 export function seoDescriptionOf(url: string, frontmatterDescription?: string): string | undefined {
-  return frontmatterDescription ?? SEO_DESCRIPTIONS[url]
+  const text = frontmatterDescription ?? SEO_DESCRIPTIONS[url]
+  return text?.replace(/\[([^\]]+)\]\([^)]+\)/g, "$1")
 }
 
 const CONTENT_DIR = path.join(process.cwd(), "content", "docs")
@@ -52,15 +51,19 @@ const CONTENT_DIR = path.join(process.cwd(), "content", "docs")
 type Section = { label: string; href: string }
 
 const SECTIONS: Record<string, Section> = {
+  start: { label: "快速开始", href: "/docs" },
+  "use-cases": { label: "orbitproxy使用用例", href: "/docs/gateway/use-cases/traffic-entry" },
   gateway: { label: "API Gateway", href: "/docs/gateway/overview" },
   "mcp-gateway": { label: "MCP Gateway", href: "/docs/mcp-gateway/overview" },
-  policy: { label: "流量策略", href: "/docs/gateway/traffic-policy" },
+  policy: { label: "流量策略", href: "/docs/policy/ip-access-control" },
   client: { label: "客户端", href: "/docs/client/cli" },
+  legal: { label: "法律和合规", href: "/docs/legal/overview" },
+  faq: { label: "常见问题", href: "/docs/faq" },
 }
 
-/** 这篇是 API Gateway 的使用用例，虽然文件放在 policy 目录下，导航归属 API Gateway。 */
+/** 文件目录和一级菜单不是同一套。 */
 const SECTION_OVERRIDES: Record<string, string> = {
-  "/docs/policy/ip-access": "gateway",
+  "/docs/policy/ip-access": "use-cases",
   "/docs/gateway/traffic-policy": "policy",
 }
 
@@ -68,6 +71,8 @@ const SECTION_OVERRIDES: Record<string, string> = {
 const GENERIC_TITLES = new Set(["概览", "概述", "快速开始"])
 
 export function sectionOf(url: string): Section | null {
+  if (url === "/docs" || url.startsWith("/docs/start/")) return SECTIONS.start
+  if (url.includes("/use-cases/")) return SECTIONS["use-cases"]
   const key = SECTION_OVERRIDES[url] ?? url.split("/")[2]
   return key ? (SECTIONS[key] ?? null) : null
 }

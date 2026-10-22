@@ -1,6 +1,7 @@
 import { createRelativeLink } from "fumadocs-ui/mdx"
 import type { Metadata } from "next"
 import { notFound } from "next/navigation"
+import type { ReactNode } from "react"
 
 import { CopyPage } from "@/components/copy-page"
 import { DocsJsonLd } from "@/components/docs-json-ld"
@@ -24,7 +25,7 @@ export default async function Page(props: PageProps<"/docs/[[...slug]]">) {
   if (!page) notFound()
 
   const MDX = page.data.body
-  const toc = params.slug?.length ? (page.data.toc ?? []) : []
+  const toc = page.data.toc ?? []
 
   return (
     <div className="docs-main-inner">
@@ -37,14 +38,12 @@ export default async function Page(props: PageProps<"/docs/[[...slug]]">) {
         />
       )}
       <article className="docs-article">
-        <header className="mb-6">
+        <header className="">
           <div className="docs-title-row">
             <h1 className="docs-title">{page.data.title}</h1>
             <CopyPage />
           </div>
-          {page.data.description ? (
-            <p className="docs-desc">{page.data.description}</p>
-          ) : null}
+          {page.data.description ? <DocsLead text={page.data.description} /> : null}
         </header>
         <div className="prose">
           <MDX
@@ -56,6 +55,7 @@ export default async function Page(props: PageProps<"/docs/[[...slug]]">) {
       </article>
       {toc.length > 0 ? (
         <nav className="docs-toc" aria-label="Table of contents">
+          <p className="docs-toc-label">本页内容</p>
           {toc.map((item) => (
             <a key={item.url} href={item.url} data-depth={item.depth}>
               {item.title}
@@ -65,6 +65,24 @@ export default async function Page(props: PageProps<"/docs/[[...slug]]">) {
       ) : null}
     </div>
   )
+}
+
+function DocsLead({ text }: { text: string }) {
+  const nodes: ReactNode[] = []
+  const pattern = /\[([^\]]+)\]\(([^)]+)\)/g
+  let last = 0
+  for (const match of text.matchAll(pattern)) {
+    const index = match.index ?? 0
+    if (index > last) nodes.push(text.slice(last, index))
+    nodes.push(
+      <a key={index} href={match[2]}>
+        {match[1]}
+      </a>,
+    )
+    last = index + match[0].length
+  }
+  if (last < text.length) nodes.push(text.slice(last))
+  return <p className="docs-desc">{nodes}</p>
 }
 
 export function generateStaticParams() {
