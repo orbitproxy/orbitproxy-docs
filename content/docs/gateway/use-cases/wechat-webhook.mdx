@@ -4,16 +4,219 @@ title: localhost/内网服务接收微信支付等第三方 webhook回调
 
 <PolicyTag scope="api" />
 
-使用 orbitproxy 来允许 localhost接收微信支付等第三方 webhook回调， 并了解如何使用 webhook verify 在生产环境中在 orbitproxy API 网关验证进入你内网服务的 webhook 回调的合法性
+使用 orbitproxy 来允许 localhost 接收微信支付等第三方 webhook 回调，并了解如何使用 webhook 回调验证，在 orbitproxy API 网关确认进入内网服务的回调合法。
 
-orbitproxy 允许 微信支付、支付宝 和 互亿无线等受信任的第三方云服务向运行在用户内网的应用程序发送 Webhook。orbitproxy 会在其网络边缘验证 Webhook 签名，从而确保只有合法流量才能到达你的应用程序。
+第三方把回调打到一条始终在线的 HTTPS 云端点。orbitproxy 在网络边缘核对来源，核对通过的请求才经客户端转到你的内网服务。客户端主动向外连接云网关，你的机器不需要开放入站端口，也不需要做端口映射。
 
+下面按微信支付走一遍。客户端、云端点、规则的添加方式、访问日志和重放，互亿无线也是这一套。只有身份源材料、规则填法和回调地址不同，这几处用标签分开。控制台目前能创建的身份源是微信支付和互亿无线。
 
 ## 为什么在 orbitproxy 接收 webhook ?
 
-- **集中控制**。验证、路由和密钥都存储在同一个系统中, 无需在多个不同语言服务中重复撰写webhook 适配代码。
-- **防止 webhook 欺骗**。微信支付这类敏感 webhook，产品的实现方式根据开发者和其使用vibe coding的水平高低可能会出现多种不同方式的写法， 很多写法只实现了具体的支付逻辑，却缺失对微信支付回调的严格验证，又由于 webhook 回调不允许配置鉴权机制，所以使得微信支付这类回调极易被伪造篡改， orbitproxy提供一套完整的企业级验证策略，将API网关接收到的 webhook 回调在边缘进行合法性验证，伪造或篡改的请求会在到达您的任何计算节点之前被拒绝。
-- **追踪所有第三方 webhook 回调请求**。 API网关强大的请求追踪能力允许你可视化所有进入你服务的 webhook回调，你可以清晰的看到每一次访问的调用请求和响应内容，以方便后续与第三方进行对账
-- **webhook 重放**： orbitproxy 云端点始终在线，并对 webhook 提供幂等的重放能力，这使得调试开发或者生产补签等场景下非常好用
+- **集中控制**。验证材料和规则放在控制中心，同一套身份源可以挂到多个云端点，不必在每种语言的服务里各写一份验签。
+- **防止 webhook 欺骗**。微信支付这类回调不能自带你自己的鉴权。业务代码如果只处理了支付结果、没有验签，回调就可能被伪造或篡改。orbitproxy 在请求到达任何计算节点之前完成核对，未通过的请求在网关终止。
+- **追踪每一次回调**。开启访问日志后，可以在控制中心看到每一次回调的请求和响应，方便和第三方对账。
+- **按原文再投递一次**。已经采集到请求体的回调可以重放。调试时不必让第三方再推一次；线上漏处理的回调，修复后也可以补发。重放会让上游再收到同一份请求，有副作用的回调需要上游按业务单号自行做幂等。
 
+## 在这个案例中你将了解到什么
 
+1. 如何把 localhost 或内网里的 HTTP 服务接到一条 HTTPS 云端点
+2. 如何把验签材料存成 webhook 身份源，并按路径挂上规则
+3. 如何把回调地址交给第三方
+4. 如何在访问日志里核对回调，以及如何重放已经采集到的请求
+
+字段说明见 [Webhook 验证](/docs/policy/webhook-verify)。云端点本身的创建见 [云端点](/docs/gateway/endpoints)。
+
+## 你需要准备什么
+
+**一个 orbitproxy 账号，且当前订阅包含「webhook回调验证」。** 没有这项权益时，流量策略里的 Event 验证会显示「权益不足」，规则无法保存。
+
+**一台已经登录、并且正在运行的 orbitproxy 客户端。** 客户端跑在接收服务所在的机器上，或跑在能访问该内网地址的机器上。安装见 [安装指引](/docs/client/install)。启动后保持 `orbitproxy run`（或后台、系统服务）在运行，公网流量才能到达内网。
+
+**一个已经在监听的 HTTP 服务。** 本机服务用 `127.0.0.1:端口`。同一内网里的另一台机器，用那台机器的内网 IP 和端口。服务还没写好时，可以先用 <a href="https://github.com/orbitproxy/api-demo" target="_blank" rel="noopener noreferrer">orbitproxy 演示服务</a> 在本机 `4000` 端口起一个 HTTP API，用来确认回调已经进来。演示服务不会处理支付结果。
+
+**验签材料：**
+
+<Tabs items={['微信支付', '互亿无线']}>
+  <Tab value="微信支付">
+
+商户平台「微信支付公钥」中的公钥 ID（`PUB_KEY_ID_…`，与回调头 `Wechatpay-Serial` 一致）和公钥 PEM。这里填写的是微信支付公钥。
+
+  </Tab>
+  <Tab value="互亿无线">
+
+你自己拟定的一段路径口令。它会出现在回调路径末尾。
+
+  </Tab>
+</Tabs>
+
+**如果要重放：** 当前订阅需要包含「HTTP 请求重放」，并且这条云端点的访问日志采集了请求体。请求体被截断的记录无法重放。
+
+## 1. 让接收服务留在内网
+
+在要接收回调的机器上启动你的 HTTP 服务，确认本机可以访问它，例如 `http://127.0.0.1:8080`。
+
+然后在同一台机器上启动客户端：
+
+```bash
+orbitproxy run
+```
+
+客户端启动后会主动连接 orbitproxy 云网关，连接是出站的 TLS。公司防火墙或 NAT 后面的机器，只要能访问公网，就可以接收回调。会话如何建立见 [客户端工作原理](/docs/client/how-it-works)。
+
+## 2. 创建公网入口
+
+云端点怎么创建，见 <a href="/docs/gateway/endpoints" target="_blank" rel="noopener noreferrer">云端点</a>。新建一条 HTTPS 云端点，内网地址填接收回调的服务，例如 `127.0.0.1:8080`。
+
+一条云端点只转发到这一个内网地址。支付回调和短信回执要交给两台服务时，再创建一条云端点。
+
+这条云端点会一直存在，直到你删除它。笔记本休眠或客户端短暂离线后，客户端重新连上，回调会继续转到同一个内网地址。
+
+创建完成后，先确认入口可用：
+
+```bash
+curl -i https://$YOUR_DOMAIN
+```
+
+`$YOUR_DOMAIN` 换成云端点的公网域名。能看到内网服务的响应后，再继续配置验签。
+
+## 3. 把验签材料存成身份源
+
+身份源属于账号，不写在某一条云端点上。同一条身份源可以挂到多个云端点的规则里。
+
+打开 <a href="https://dashboard.app.orbitproxy.cloud/api-gateway/providers" target="_blank" rel="noopener noreferrer">webhook 身份源</a>，点击 **新增 webhook 身份源**。名称填一个你能认出来的名字。
+
+<Tabs items={['微信支付', '互亿无线']}>
+  <Tab value="微信支付">
+
+身份源类型选择 **微信支付**。名称可以填「生产环境微信支付」。
+
+| 字段 | 填写内容 |
+| --- | --- |
+| 微信支付公钥 ID | 商户平台「微信支付公钥」中的 `PUB_KEY_ID_…` |
+| 微信支付公钥 PEM | 同一处下载的公钥，以 `-----BEGIN PUBLIC KEY-----` 开头 |
+
+<Alert type="brand">
+微信支付在 <a href="https://pay.weixin.qq.com/docs/merchant/products/platform-certificate/faq.html" target="_blank" rel="noopener noreferrer">平台证书常见问题</a> 里写明：「公钥是可以公开的密钥。」这里填写的微信支付公钥，用来验证微信支付的应答和回调，说明见 <a href="https://pay.weixin.qq.com/doc/v3/merchant/4012153196" target="_blank" rel="noopener noreferrer">微信支付公钥</a>。公钥 ID 会放在应答和回调的 <code>Wechatpay-Serial</code> 里，用来标明验签用的是哪一把公钥，说明见 <a href="https://pay.weixin.qq.com/doc/v3/merchant/4013070756" target="_blank" rel="noopener noreferrer">开发必要参数说明</a>。
+</Alert>
+
+保存后，这条身份源出现在列表中，类型为微信支付。
+
+  </Tab>
+  <Tab value="互亿无线">
+
+身份源类型选择 **互亿无线**。路径口令填一段你自己拟定的字符串，例如 `a1b2c3`。后面的回调路径必须以 `/a1b2c3` 结尾。
+
+  </Tab>
+</Tabs>
+
+## 4. 按路径验签，再转发到内网服务
+
+回到 <a href="https://dashboard.app.orbitproxy.cloud/api-gateway" target="_blank" rel="noopener noreferrer">HTTPS/TCP 云端点</a>，找到第 2 步创建的云端点：
+
+1. 点击卡片右上角的 Action 操作按钮
+2. 点击 **流量策略**
+3. 展开 **Event 验证**。这一项带有「HTTPS 专属」标记，就是文档中的 [Webhook 验证](/docs/policy/webhook-verify)
+4. 点击 **添加规则**
+
+一条规则对应一条精确路径。路径以 `/` 开头，不能只写 `/`，并且要和你交给第三方的回调 URL 路径一致。没有挂规则的路径仍会转发到同一个内网地址，验签只保护写进规则的那些路径。
+
+<Tabs items={['微信支付', '互亿无线']}>
+  <Tab value="微信支付">
+
+支付、退款、签约各用一条路径，身份源都选第 3 步创建的微信支付身份源。
+
+支付回调：
+
+| 字段 | 填写内容 |
+| --- | --- |
+| 规则名称 | 微信支付支付回调 |
+| 回调路径 | `/api/webhook/wxpay/payment` |
+| webhook 身份源 | 第 3 步创建的微信支付身份源 |
+| 回调类型 | 支付回调 |
+
+退款和签约再各加一条规则，身份源相同，路径和回调类型不同。验签通过后，网关只放行对应的 `event_type`：
+
+- 支付回调，路径 `/api/webhook/wxpay/payment`，放行 `TRANSACTION.SUCCESS`
+- 退款回调，路径 `/api/webhook/wxpay/refund`，放行 `REFUND.SUCCESS`、`REFUND.ABNORMAL`、`REFUND.CLOSED`
+- 签约 / 解约，路径 `/api/webhook/wxpay/contract`，放行 `ENTRUST.SIGN`、`ENTRUST.TERMINATE`，以及支付分的 `PAYSCORE.USER_CONFIRM`、`PAYSCORE.USER_TERMINATE`、`PAYSCORE.USER_SIGN_PLAN`、`PAYSCORE.USER_CANCEL_SIGN_PLAN`
+
+签名通过之后，网关还要核对报文体里的 `event_type`。退款通知打到支付路径上，会得到 `401`，不会进入内网。
+
+回调路径旁边的代码图标会打开示例代码，并给出这条规则的完整回调地址，例如 `https://$YOUR_DOMAIN/api/webhook/wxpay/payment`。下单、退款或创建签约单时，把这个地址填进 `notify_url`。
+
+  </Tab>
+  <Tab value="互亿无线">
+
+| 字段 | 填写内容 |
+| --- | --- |
+| 规则名称 | 互亿无线回执 |
+| 回调路径 | `/api/webhook/ihuyi/a1b2c3` |
+| webhook 身份源 | 第 3 步创建的互亿无线身份源 |
+
+把路径口令换成你在身份源里填写的那一段。路径必须以 `/<路径口令>` 结尾，否则规则无法保存。互亿无线没有签名，网关用路径末尾的口令确认这是你配置的接收地址。上游处理完成后需要返回纯文本 `success`。
+
+  </Tab>
+</Tabs>
+
+## 5. 把回调地址交给第三方，并确认核对生效
+
+规则保存后，把完整回调地址交给第三方。核对失败时网关返回 `401`，请求不会进入内网。核对通过后，请求会出现在内网服务里。
+
+<Tabs items={['微信支付', '互亿无线']}>
+  <Tab value="微信支付">
+
+微信支付不在商户平台里填一个全局回调地址。创建订单、退款或签约时，把第 4 步示例代码里的地址写进 `notify_url`：
+
+- 支付：`https://$YOUR_DOMAIN/api/webhook/wxpay/payment`
+- 退款：`https://$YOUR_DOMAIN/api/webhook/wxpay/refund`
+- 签约 / 解约：`https://$YOUR_DOMAIN/api/webhook/wxpay/contract`
+
+可以先发一个没有合法签名的请求，确认网关会拦住它：
+
+```bash
+curl -i -X POST "https://$YOUR_DOMAIN/api/webhook/wxpay/payment" \
+  -H "Content-Type: application/json" \
+  -d "{}"
+```
+
+这次请求的状态码是 `401`，响应说明为 webhook verification failed。你的内网服务收不到这个请求。然后用一笔真实的支付或退款，把合法回调打到对应路径。
+
+  </Tab>
+  <Tab value="互亿无线">
+
+在互亿无线控制台的数据接收地址中填写 `https://$YOUR_DOMAIN/api/webhook/ihuyi/a1b2c3`，路径末尾换成你自己的路径口令。
+
+互亿无线没有签名。路径以口令结尾时，网关放行并把请求转到内网服务；路径对不上时，这条规则不会命中。用一次真实回执确认内网服务收到了请求，并返回纯文本 `success`。
+
+  </Tab>
+</Tabs>
+
+<Alert type="info">
+云端点的请求体上限默认 64KB。回调报文超过这个上限时，网关会直接拒绝，需要在云端点编辑里调高请求体上限。只改验签规则不会放行更大的报文。
+</Alert>
+
+## 6. 在访问日志里核对，需要时重放
+
+要看到报文内容和你的服务返回了什么，需要给这条云端点打开访问日志。
+
+仍在该云端点的流量策略中，展开 **访问日志**，点击 **添加规则**。采集级别勾选「请求体 / 响应体」。日志 Body 上限至少要盖住回调报文，默认 4KB，按你的报文把上限调高。保留天数按订阅可选 1 天、3 天或 7 天。
+
+再触发一次回调，打开 <a href="https://dashboard.app.orbitproxy.cloud/observability/request-logs" target="_blank" rel="noopener noreferrer">云端点访问日志</a>。合法回调的状态码来自你的内网服务。微信支付那个没有签名的请求也会留在日志里，状态码为 `401`，并标明被 webhook 验证拒绝。点开一条日志可以看到当时的请求体和响应体。
+
+详情页可以重放这一次请求。重放要求：
+
+- 当前订阅包含 HTTP 请求重放。没有权益时，重放按钮仍在，但不可用
+- 这条日志采集了完整请求体。采集级别只有元数据或请求头，或者请求体超过日志 Body 上限被截断时，不能重放
+- 协议是 HTTPS。TCP 云端点不能重放
+
+在详情里点 **重放**，确认后，网关把当时捕获的请求再注入内网服务，并新写一条带「重放」标记的访问日志。带「重放」标记的记录不能再次重放。
+
+<Alert type="warning">
+原请求如果当时被验签拒绝，重放会跳过 webhook 回调验证，把捕获到的报文直接交给内网服务。有副作用的回调会再次执行，请先确认上游按业务单号做了幂等，再重放。
+</Alert>
+
+## 接下来是什么？
+
+- 验签字段和身份源材料的说明，见 [Webhook 验证](/docs/policy/webhook-verify)
+- 采集级别和保留天数，见 [访问日志](/docs/policy/access-log)
+- 把同一条云端点同时用作站点入口，见 [使用 orbitproxy 作为你任何服务的流量入口](/docs/gateway/use-cases/traffic-entry)

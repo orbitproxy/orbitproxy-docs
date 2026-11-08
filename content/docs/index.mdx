@@ -4,7 +4,6 @@ title: 概述
 
 import {
   Binoculars,
-  CaretRight,
   ChartLineUp,
   Graph,
   Lightning,
@@ -22,111 +21,87 @@ orbitproxy 是一个集成网关平台，可以连接你任何位置（云主机
 
 ## 你可以用它做什么
 
-<div className="capability-list">
-  <details>
-    <summary>
-      <CaretRight className="capability-caret" weight="fill" aria-hidden="true" />
-      <Graph className="capability-icon" weight="regular" aria-hidden="true" />
-      <span>替代 nginx, caddy作为你任何服务的流量入口</span>
-    </summary>
-    <div className="capability-body">
-      <p>为你的任何服务提供企业级安全策略和负载策略，内网服务无需做任何代码变更即可快速集成 IP 访问控制，API Authorization，OAuth2.1，webhook 回调验证，流量限速等复杂流量处理能力，保证自身服务的高可用和高安全性。</p>
-      <p>
-        <a href="/docs/gateway/overview">查看这篇</a>
-      </p>
-    </div>
-  </details>
-  <details>
-    <summary>
-      <CaretRight className="capability-caret" weight="fill" aria-hidden="true" />
-      <Rocket className="capability-icon" weight="regular" aria-hidden="true" />
-      <span>快速分享 localhost, 内网服务到互联网</span>
-    </summary>
-    <div className="capability-body">
-      <p>将内网和 localhost 上的 HTTP、TCP 服务发布到公网。</p>
-      <p>
-        <a href="/docs/gateway/use-cases/traffic-entry">查看这篇</a>
-      </p>
-    </div>
-  </details>
-  <details>
-    <summary>
-      <CaretRight className="capability-caret" weight="fill" aria-hidden="true" />
-      <Wrench className="capability-icon" weight="regular" aria-hidden="true" />
-      <span>为你的产品或者服务快速开启维护模式并熔断请求</span>
-    </summary>
-    <div className="capability-body">
-      <p>不改代码、不停服务，在网关一键让生产环境进入维护熔断，向访问者展示维护页面。</p>
-      <p>
-        <a href="/docs/gateway/use-cases/maintenance-mode">查看这篇</a>
-      </p>
-    </div>
-  </details>
-  <details>
-    <summary>
-      <CaretRight className="capability-caret" weight="fill" aria-hidden="true" />
-      <Lightning className="capability-icon" weight="regular" aria-hidden="true" />
-      <span>本地 localhost开发时态接收微信支付等第三方 webhook回调</span>
-    </summary>
-    <div className="capability-body">
-      <p>让 localhost 和内网服务接收微信支付等第三方 webhook，并在网关校验签名后再转发。</p>
-      <p>
-        <a href="/docs/gateway/use-cases/wechat-webhook">查看这篇</a>
-      </p>
-    </div>
-  </details>
-  <details>
-    <summary>
-      <CaretRight className="capability-caret" weight="fill" aria-hidden="true" />
-      <ChartLineUp className="capability-icon" weight="regular" aria-hidden="true" />
-      <span>为你的站点快速开启访问追踪，访客日志，webhook回调历史记录等企业级观测能力</span>
-    </summary>
-    <div className="capability-body">
-      <p>对进入你服务的所有请求进行追踪，提供完善的 HTTP 访问日志及回放日志，智能识别恶意攻击及异常请求并实时预警。</p>
-      <p>
-        <a href="/docs/gateway/observability">查看这篇</a>
-      </p>
-    </div>
-  </details>
-  <details>
-    <summary>
-      <CaretRight className="capability-caret" weight="fill" aria-hidden="true" />
-      <Binoculars className="capability-icon" weight="regular" aria-hidden="true" />
-      <span>记录，观测个人和团队在使用AI Agent 时对MCP的每一次调用</span>
-    </summary>
-    <div className="capability-body">
-      <p>记录、监控和调试 AI 对 MCP 端点的每一次访问，团队成员的 Agent 调用不再是黑盒。</p>
-      <p>
-        <a href="/docs/mcp-gateway/observability">查看这篇</a>
-      </p>
-    </div>
-  </details>
-  <details>
-    <summary>
-      <CaretRight className="capability-caret" weight="fill" aria-hidden="true" />
-      <PlugsConnected className="capability-icon" weight="regular" aria-hidden="true" />
-      <span>帮助你的AI Agent 连接处于任何位置的 stdio 模式 MCP 服务</span>
-    </summary>
-    <div className="capability-body">
-      <p>在 MCP Gateway 上注册内网或 localhost 的 Stdio MCP，让 Cursor、Trae 等 AI Agent 安全访问，不必把数据库和密钥暴露到公网。</p>
-      <p>
-        <a href="/docs/mcp-gateway/use-cases/connect-internal">查看这篇</a>
-      </p>
-    </div>
-  </details>
-  <details>
-    <summary>
-      <CaretRight className="capability-caret" weight="fill" aria-hidden="true" />
-      <ShieldCheck className="capability-icon" weight="regular" aria-hidden="true" />
-      <span>为团队或者个人已有的MCP服务提供访问控制，高危 tool 识别拦截等安全能力</span>
-    </summary>
-    <div className="capability-body">
-      <p>按访问密钥授权允许调用的 Tools，并按语句类别、操作和路径限制 SQL 与文件操作，未授权调用不会进入内网。</p>
-      <p>
-        <a href="/docs/policy/mcp-access">查看这篇</a>
-      </p>
-    </div>
-  </details>
+<div className="develop-grid">
+  <a className="develop-card" href="/docs/gateway/overview">
+    <span className="develop-card-face">
+      <Graph className="develop-card-icon" size={24} weight="regular" aria-hidden="true" />
+      <span className="develop-card-copy">
+        <span className="develop-card-title">替代 nginx、caddy 作为流量入口</span>
+        <span className="develop-card-desc">为任何服务补上访问控制、鉴权、webhook 校验和限速，内网服务不用改代码。</span>
+      </span>
+    </span>
+    <span className="develop-card-tip" role="tooltip">为任何服务补上访问控制、鉴权、webhook 校验和限速，内网服务不用改代码。</span>
+  </a>
+  <a className="develop-card" href="/docs/gateway/use-cases/traffic-entry">
+    <span className="develop-card-face">
+      <Rocket className="develop-card-icon" size={24} weight="regular" aria-hidden="true" />
+      <span className="develop-card-copy">
+        <span className="develop-card-title">把 localhost 和内网发到公网</span>
+        <span className="develop-card-desc">把内网和 localhost 上的 HTTP、TCP 服务发布到公网。</span>
+      </span>
+    </span>
+    <span className="develop-card-tip" role="tooltip">把内网和 localhost 上的 HTTP、TCP 服务发布到公网。</span>
+  </a>
+  <a className="develop-card" href="/docs/gateway/use-cases/maintenance-mode">
+    <span className="develop-card-face">
+      <Wrench className="develop-card-icon" size={24} weight="regular" aria-hidden="true" />
+      <span className="develop-card-copy">
+        <span className="develop-card-title">一键进入维护熔断</span>
+        <span className="develop-card-desc">不改代码、不停服务，在网关让生产环境进入维护熔断，向访问者展示维护页面。</span>
+      </span>
+    </span>
+    <span className="develop-card-tip" role="tooltip">不改代码、不停服务，在网关让生产环境进入维护熔断，向访问者展示维护页面。</span>
+  </a>
+  <a className="develop-card" href="/docs/gateway/use-cases/wechat-webhook">
+    <span className="develop-card-face">
+      <Lightning className="develop-card-icon" size={24} weight="regular" aria-hidden="true" />
+      <span className="develop-card-copy">
+        <span className="develop-card-title">本地接收微信支付回调</span>
+        <span className="develop-card-desc">让 localhost 和内网服务接收微信支付等第三方 webhook，并在网关校验签名后再转发。</span>
+      </span>
+    </span>
+    <span className="develop-card-tip" role="tooltip">让 localhost 和内网服务接收微信支付等第三方 webhook，并在网关校验签名后再转发。</span>
+  </a>
+  <a className="develop-card" href="/docs/gateway/observability">
+    <span className="develop-card-face">
+      <ChartLineUp className="develop-card-icon" size={24} weight="regular" aria-hidden="true" />
+      <span className="develop-card-copy">
+        <span className="develop-card-title">访问追踪和访客日志</span>
+        <span className="develop-card-desc">追踪进入服务的请求，保留 HTTP 访问日志和回放，并识别异常流量。</span>
+      </span>
+    </span>
+    <span className="develop-card-tip" role="tooltip">追踪进入服务的请求，保留 HTTP 访问日志和回放，并识别异常流量。</span>
+  </a>
+  <a className="develop-card" href="/docs/mcp-gateway/observability">
+    <span className="develop-card-face">
+      <Binoculars className="develop-card-icon" size={24} weight="regular" aria-hidden="true" />
+      <span className="develop-card-copy">
+        <span className="develop-card-title">观察每一次 MCP 调用</span>
+        <span className="develop-card-desc">记录、监控和调试 AI 对 MCP 端点的每一次访问，团队成员的 Agent 调用不再是黑盒。</span>
+      </span>
+    </span>
+    <span className="develop-card-tip" role="tooltip">记录、监控和调试 AI 对 MCP 端点的每一次访问，团队成员的 Agent 调用不再是黑盒。</span>
+  </a>
+  <a className="develop-card" href="/docs/mcp-gateway/use-cases/connect-internal">
+    <span className="develop-card-face">
+      <PlugsConnected className="develop-card-icon" size={24} weight="regular" aria-hidden="true" />
+      <span className="develop-card-copy">
+        <span className="develop-card-title">连接任意位置的 Stdio MCP</span>
+        <span className="develop-card-desc">在 MCP Gateway 上注册内网或 localhost 的 Stdio MCP，让 Cursor、Trae 安全访问，不必把数据库和密钥暴露到公网。</span>
+      </span>
+    </span>
+    <span className="develop-card-tip" role="tooltip">在 MCP Gateway 上注册内网或 localhost 的 Stdio MCP，让 Cursor、Trae 安全访问，不必把数据库和密钥暴露到公网。</span>
+  </a>
+  <a className="develop-card" href="/docs/policy/mcp-access">
+    <span className="develop-card-face">
+      <ShieldCheck className="develop-card-icon" size={24} weight="regular" aria-hidden="true" />
+      <span className="develop-card-copy">
+        <span className="develop-card-title">拦住高危 MCP 调用</span>
+        <span className="develop-card-desc">按访问密钥授权可调用的 Tools，并限制 SQL 与文件操作，未授权调用不会进入内网。</span>
+      </span>
+    </span>
+    <span className="develop-card-tip" role="tooltip">按访问密钥授权可调用的 Tools，并限制 SQL 与文件操作，未授权调用不会进入内网。</span>
+  </a>
 </div>
 
 ## 后续步骤

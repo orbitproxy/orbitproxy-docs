@@ -15,7 +15,7 @@ export function CopyPage() {
   }
 
   return (
-    <button type="button" className="docs-btn docs-btn-secondary" onClick={onCopy}>
+    <button type="button" className="docs-btn docs-btn-copy" onClick={onCopy}>
       {copied ? "Copied" : "Copy page"}
     </button>
   )

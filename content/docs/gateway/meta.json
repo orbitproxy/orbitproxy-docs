@@ -3,7 +3,6 @@
   "defaultOpen": true,
   "pages": [
     "overview",
-    "webhook",
     "endpoints",
     "traffic-policy",
     "observability",

@@ -1,13 +1,11 @@
 "use client"
 
-import { useEffect, useState, type ReactNode } from "react"
+import { createContext, useContext, useEffect, useState, type ReactNode } from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import type { Folder, Node, Root } from "fumadocs-core/page-tree"
 import { useSearchContext } from "fumadocs-ui/contexts/search"
-
-import { PolicyTag, type PolicyScope } from "@/components/policy-tag"
 
 type NavItem = {
   href: string
@@ -20,28 +18,21 @@ type NavItem = {
 const CONSOLE_URL =
   process.env.NEXT_PUBLIC_CONSOLE_URL ?? "https://dashboard.app.orbitproxy.cloud"
 
-const USE_CASE_PAGES = [
+const API_USE_CASES = [
   "/docs/gateway/use-cases/traffic-entry",
   "/docs/gateway/use-cases/wechat-webhook",
   "/docs/policy/ip-access",
   "/docs/gateway/use-cases/maintenance-mode",
   "/docs/gateway/use-cases/block-bots",
   "/docs/gateway/use-cases/compress-json",
+]
+
+const MCP_USE_CASES = [
   "/docs/mcp-gateway/use-cases/connect-internal",
   "/docs/mcp-gateway/use-cases/composer",
 ]
 
-/** 使用用例在侧边栏标题前显示的适用范围，与各页正文第一行的 PolicyTag 保持一致。 */
-const USE_CASE_SCOPES: Record<string, PolicyScope> = {
-  "/docs/gateway/use-cases/traffic-entry": "api",
-  "/docs/gateway/use-cases/wechat-webhook": "api",
-  "/docs/policy/ip-access": "api",
-  "/docs/gateway/use-cases/maintenance-mode": "api",
-  "/docs/gateway/use-cases/block-bots": "api",
-  "/docs/gateway/use-cases/compress-json": "api",
-  "/docs/mcp-gateway/use-cases/connect-internal": "mcp",
-  "/docs/mcp-gateway/use-cases/composer": "mcp",
-}
+const USE_CASE_PAGES = [...API_USE_CASES, ...MCP_USE_CASES]
 
 /** 核心概念：各个板块的概述页。页面 URL 不变，只是在侧边栏里归到「快速开始」。 */
 const CORE_CONCEPTS: [string, string][] = [
@@ -83,7 +74,10 @@ const PRIMARY_NAV: NavItem[] = [
     href: USE_CASE_PAGES[0],
     label: "orbitproxy使用用例",
     match: (pathname) => USE_CASE_PAGES.includes(pathname),
-    select: (tree) => group(tree, "使用用例", USE_CASE_PAGES),
+    select: (tree) => [
+      ...group(tree, "API网关用例", API_USE_CASES),
+      ...group(tree, "MCP网关用例", MCP_USE_CASES),
+    ],
   },
   {
     href: "/docs/client/cli",
@@ -134,18 +128,6 @@ const PRIMARY_NAV: NavItem[] = [
   },
 ]
 
-function findPageName(nodes: Node[], url: string): ReactNode {
-  for (const node of nodes) {
-    if (node.type === "page" && node.url === url) return node.name
-    if (node.type === "folder") {
-      if (node.index?.url === url) return node.index.name
-      const found = findPageName(node.children, url)
-      if (found) return found
-    }
-  }
-  return null
-}
-
 function covers(pathname: string, prefix: string) {
   return pathname === prefix || pathname.startsWith(`${prefix}/`)
 }
@@ -183,6 +165,50 @@ function group(tree: Root, name: string, urls: string[]): Node[] {
   return [{ type: "separator", name }, ...items]
 }
 
+const DocsMetaContext = createContext<{ section: string; group: string | null }>({
+  section: "",
+  group: null,
+})
+
+export function DocsCrumb() {
+  const { section, group } = useContext(DocsMetaContext)
+  if (!section) return null
+  return (
+    <div className="docs-crumb">
+      <span>{section}</span>
+      {group ? (
+        <>
+          <svg viewBox="0 0 12 12" width="12" height="12" fill="none" aria-hidden="true">
+            <path
+              d="M4.5 2.5 8 6l-3.5 3.5"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+          <span>{group}</span>
+        </>
+      ) : null}
+    </div>
+  )
+}
+
+function crumbGroup(nodes: Node[], pathname: string): string | null {
+  let label: string | null = null
+  for (const node of nodes) {
+    if (node.type === "separator") {
+      label = String(node.name)
+      continue
+    }
+    if (node.type === "page" && node.url === pathname) return label
+    if (node.type === "folder" && folderContainsPath(node, pathname)) {
+      return label ?? String(node.name)
+    }
+  }
+  return null
+}
+
 function namedGroup(tree: Root, name: string, items: [string, string][]): Node[] {
   const indexed = indexPages(tree.children)
   const nodes = items.flatMap(([label, url]) => {
@@ -200,17 +226,28 @@ export function DocsShell({
   tree: Root
   children: ReactNode
 }) {
-  const pathname = usePathname()
+  const rawPath = usePathname()
+  // next.config 把 / 改写到 /docs，地址栏仍是 /。选中态按文档首页算。
+  const pathname = rawPath === "/" ? "/docs" : rawPath
   const { setOpenSearch } = useSearchContext()
   const primary = PRIMARY_NAV.find((item) => item.match(pathname)) ?? PRIMARY_NAV[0]
   const secondary = primary.select(tree)
   const [menuOpen, setMenuOpen] = useState(false)
-  const currentTitle = findPageName(secondary, pathname)
+  const [drawerSectionHref, setDrawerSectionHref] = useState<string | null>(primary.href)
+  const [modKey, setModKey] = useState("⌘")
+  const group = crumbGroup(secondary, pathname)
 
-  // 路由切换后收起移动端菜单
+  useEffect(() => {
+    if (!/Mac|iPhone|iPad/.test(navigator.platform)) setModKey("Ctrl")
+  }, [])
+
   useEffect(() => {
     setMenuOpen(false)
   }, [pathname])
+
+  useEffect(() => {
+    if (menuOpen) setDrawerSectionHref(primary.href)
+  }, [menuOpen, primary.href])
 
   // 菜单展开时锁住页面滚动
   useEffect(() => {
@@ -223,119 +260,163 @@ export function DocsShell({
   }, [menuOpen])
 
   return (
-    <>
+    <DocsMetaContext.Provider value={{ section: primary.label, group }}>
       <header className="docs-header">
-        <div className="docs-header-inner">
-        <div className="docs-header-bar">
-          <Link href="/docs" className="docs-logo" aria-label="orbitproxy docs home">
-            <Image
-              src="/logo.svg"
-              alt="orbitproxy"
-              width={120}
-              height={24}
-              priority
-              style={{ width: "auto", height: 24 }}
-            />
-            <span className="docs-logo-rule" aria-hidden />
-            <span className="docs-logo-word">文档</span>
-          </Link>
-          <div className="docs-header-actions">
-            <a
-              href="https://orbitproxy.cc"
-              className="docs-btn docs-btn-ghost"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              官网
-            </a>
-            <a
-              href={CONSOLE_URL}
-              className="docs-btn docs-btn-primary"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              进入控制中心
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 18 18"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                aria-hidden="true"
-                className="docs-btn-chevron"
-              >
-                <path d="M6.5 2.75L12.75 9L6.5 15.25" />
-              </svg>
-            </a>
-          </div>
-        </div>
+        <Link href="/docs" className="docs-logo" aria-label="orbitproxy docs home">
+          <Image
+            src="/logo.svg"
+            alt="orbitproxy"
+            width={120}
+            height={24}
+            priority
+            style={{ width: "auto", height: 24 }}
+          />
+          <span className="docs-logo-rule" aria-hidden />
+          <span className="docs-logo-word">文档</span>
+        </Link>
         <nav className="docs-header-nav" aria-label="一级导航">
           <ul>
             {PRIMARY_NAV.map((link) => (
               <li key={link.href}>
-                <Link href={link.href} data-active={link.match(pathname)}>
+                <Link href={link.href} data-active={link.match(pathname) ? "true" : "false"}>
                   {link.label}
                 </Link>
               </li>
             ))}
           </ul>
         </nav>
+        <div className="docs-header-actions">
+          {secondary.length > 0 ? (
+            <button
+              type="button"
+              className="docs-menu-btn"
+              aria-expanded={menuOpen}
+              aria-label={menuOpen ? "关闭目录" : "打开目录"}
+              onClick={() => setMenuOpen((value) => !value)}
+            >
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                {menuOpen ? (
+                  <path d="M3.5 3.5l9 9M12.5 3.5l-9 9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                ) : (
+                  <path d="M2.5 4.5h11M2.5 8h11M2.5 11.5h11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                )}
+              </svg>
+            </button>
+          ) : null}
+          <a
+            href="https://orbitproxy.cc"
+            className="docs-btn docs-btn-secondary"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            官网
+          </a>
+          <a
+            href={CONSOLE_URL}
+            className="docs-btn docs-btn-primary"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            进入控制中心
+          </a>
         </div>
       </header>
 
-      {secondary.length > 0 ? (
-        <div className="docs-mobile-bar">
-          <button
-            type="button"
-            className="docs-mobile-trigger"
-            aria-expanded={menuOpen}
-            aria-controls="docs-mobile-menu"
-            onClick={() => setMenuOpen((value) => !value)}
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              width="18"
-              height="18"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              aria-hidden="true"
-            >
-              {menuOpen ? (
-                <path d="M6 6l12 12M18 6L6 18" />
-              ) : (
-                <path d="M4 7h16M4 12h16M4 17h16" />
-              )}
-            </svg>
-            <span className="docs-mobile-crumb">
-              <span>{primary.label}</span>
-              {currentTitle ? (
-                <>
-                  <span className="docs-mobile-crumb-sep" aria-hidden>
-                    /
-                  </span>
-                  <span className="docs-mobile-crumb-current">{currentTitle}</span>
-                </>
-              ) : null}
-            </span>
-          </button>
-          {menuOpen ? (
-            <nav id="docs-mobile-menu" className="docs-mobile-menu" aria-label="二级导航">
-              <NavTree nodes={secondary} pathname={pathname} />
-            </nav>
-          ) : null}
+      {menuOpen ? (
+        <div className="docs-drawer-root">
+          <button type="button" className="docs-drawer-backdrop" aria-label="关闭目录" onClick={() => setMenuOpen(false)} />
+          <aside className="docs-drawer" aria-label="文档目录">
+            <div className="docs-drawer-bar">
+              <button type="button" className="docs-drawer-icon" aria-label="关闭目录" onClick={() => setMenuOpen(false)}>
+                <svg width="20" height="20" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                  <path d="M3.5 3.5l9 9M12.5 3.5l-9 9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                </svg>
+              </button>
+              <button
+                type="button"
+                className="docs-drawer-icon"
+                aria-label="搜索"
+                onClick={() => {
+                  setMenuOpen(false)
+                  setOpenSearch(true)
+                }}
+              >
+                <svg width="20" height="20" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                  <circle cx="7" cy="7" r="4.25" stroke="currentColor" strokeWidth="1.5" />
+                  <path d="M10.5 10.5 13.5 13.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                </svg>
+              </button>
+            </div>
+            {drawerSectionHref ? (
+              <>
+                <div className="docs-drawer-drill">
+                  <button type="button" className="docs-drawer-back" onClick={() => setDrawerSectionHref(null)}>
+                    <span className="docs-drawer-back-icon" aria-hidden />
+                    <span className="docs-drawer-back-label">
+                      {PRIMARY_NAV.find((item) => item.href === drawerSectionHref)?.label}
+                    </span>
+                    <span className="docs-drawer-back-spacer" aria-hidden />
+                    <span className="docs-sr">，返回全部栏目</span>
+                  </button>
+                </div>
+                <div className="docs-drawer-scroll">
+                  <div className="docs-sidebar-tree">
+                    <NavTree
+                      nodes={(PRIMARY_NAV.find((item) => item.href === drawerSectionHref) ?? primary).select(tree)}
+                      pathname={pathname}
+                    />
+                  </div>
+                </div>
+              </>
+            ) : (
+              <div className="docs-drawer-scroll">
+                <div className="docs-drawer-sections" role="navigation" aria-label="一级导航">
+                  {PRIMARY_NAV.map((item) => (
+                    <button
+                      key={item.href}
+                      type="button"
+                      className="docs-nav-link"
+                      data-selected={item.match(pathname) ? "true" : "false"}
+                      onClick={() => setDrawerSectionHref(item.href)}
+                    >
+                      <span className="docs-nav-text">{item.label}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+            <div className="docs-drawer-foot">
+              <a href="https://orbitproxy.cc" target="_blank" rel="noopener noreferrer">
+                官网
+              </a>
+              <a href={CONSOLE_URL} target="_blank" rel="noopener noreferrer">
+                进入控制中心
+              </a>
+            </div>
+          </aside>
         </div>
       ) : null}
 
       <div className="docs-frame">
         {secondary.length > 0 ? (
-          <aside className="docs-sidebar" aria-label="二级导航">
-            <div className="docs-sidebar-tree">
-              <NavTree nodes={secondary} pathname={pathname} />
+          <aside className="docs-sidebar" data-open={menuOpen ? "true" : "false"} aria-label="二级导航">
+            <div className="docs-sidebar-search">
+              <button type="button" className="docs-search" onClick={() => setOpenSearch(true)}>
+                <svg className="docs-search-icon" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                  <circle cx="7" cy="7" r="4.25" stroke="currentColor" strokeWidth="1.5" />
+                  <path d="M10.5 10.5 13.5 13.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                </svg>
+                <span className="docs-search-label">搜索</span>
+                <span className="docs-search-keys">
+                  <kbd>{modKey}</kbd>
+                  <kbd>K</kbd>
+                </span>
+              </button>
+            </div>
+            <div className="docs-sidebar-scroll">
+              <div className="docs-sidebar-tree">
+                <NavTree nodes={secondary} pathname={pathname} />
+              </div>
             </div>
           </aside>
         ) : null}
@@ -345,7 +426,7 @@ export function DocsShell({
       <button type="button" className="docs-ask" onClick={() => setOpenSearch(true)}>
         Ask Docs
       </button>
-    </>
+    </DocsMetaContext.Provider>
   )
 }
 
@@ -402,32 +483,42 @@ function NavTree({
   nodes: Node[]
   pathname: string
 }) {
-  return nodes.map((node) => {
+  const groups: { key: string; label: ReactNode | null; items: Node[] }[] = []
+  let bucket: { key: string; label: ReactNode | null; items: Node[] } = {
+    key: "start",
+    label: null,
+    items: [],
+  }
+  nodes.forEach((node, index) => {
     if (node.type === "separator") {
-      return (
-        <div key={String(node.name)} className="docs-nav-label">
-          {node.name}
-        </div>
-      )
+      if (bucket.label || bucket.items.length > 0) groups.push(bucket)
+      bucket = { key: `sep-${index}-${String(node.name)}`, label: node.name, items: [] }
+      return
     }
-    if (node.type === "folder") {
-      if (folderChildNodes(node).length === 0) return null
-      return <NavFolder key={String(node.name)} folder={node} pathname={pathname} />
-    }
-    return (
-      <Link
-        key={node.url}
-        href={node.url}
-        className="docs-nav-link"
-        data-selected={pathname === node.url}
-      >
-        {USE_CASE_SCOPES[node.url] ? (
-          <span className="docs-nav-tag">
-            <PolicyTag scope={USE_CASE_SCOPES[node.url]} inline />
-          </span>
-        ) : null}
-        {node.name}
-      </Link>
-    )
+    bucket.items.push(node)
   })
+  if (bucket.label || bucket.items.length > 0) groups.push(bucket)
+
+  return groups.map((group) => (
+    <div key={group.key} className="docs-nav-group">
+      {group.label ? <div className="docs-nav-label">{group.label}</div> : null}
+      {group.items.map((node) => {
+        if (node.type === "folder") {
+          if (folderChildNodes(node).length === 0) return null
+          return <NavFolder key={String(node.name)} folder={node} pathname={pathname} />
+        }
+        if (node.type !== "page") return null
+        return (
+          <Link
+            key={node.url}
+            href={node.url}
+            className="docs-nav-link"
+            data-selected={pathname === node.url ? "true" : "false"}
+          >
+            <span className="docs-nav-text">{node.name}</span>
+          </Link>
+        )
+      })}
+    </div>
+  ))
 }

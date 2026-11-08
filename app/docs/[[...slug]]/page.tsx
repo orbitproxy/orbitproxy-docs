@@ -4,7 +4,9 @@ import { notFound } from "next/navigation"
 import type { ReactNode } from "react"
 
 import { CopyPage } from "@/components/copy-page"
+import { DocsCrumb } from "@/components/docs-shell"
 import { DocsJsonLd } from "@/components/docs-json-ld"
+import { DocsToc } from "@/components/docs-toc"
 import { getMDXComponents } from "@/components/mdx"
 import {
   SITE_DESCRIPTION,
@@ -28,7 +30,7 @@ export default async function Page(props: PageProps<"/docs/[[...slug]]">) {
   const toc = page.data.toc ?? []
 
   return (
-    <div className="docs-main-inner">
+    <div className="docs-content-row">
       {isPlaceholderPage(page.path) ? null : (
         <DocsJsonLd
           title={page.data.title}
@@ -38,7 +40,8 @@ export default async function Page(props: PageProps<"/docs/[[...slug]]">) {
         />
       )}
       <article className="docs-article">
-        <header className="">
+        <header className="docs-article-header">
+          <DocsCrumb />
           <div className="docs-title-row">
             <h1 className="docs-title">{page.data.title}</h1>
             <CopyPage />
@@ -53,16 +56,7 @@ export default async function Page(props: PageProps<"/docs/[[...slug]]">) {
           />
         </div>
       </article>
-      {toc.length > 0 ? (
-        <nav className="docs-toc" aria-label="Table of contents">
-          <p className="docs-toc-label">本页内容</p>
-          {toc.map((item) => (
-            <a key={item.url} href={item.url} data-depth={item.depth}>
-              {item.title}
-            </a>
-          ))}
-        </nav>
-      ) : null}
+      {toc.length > 0 ? <DocsToc items={toc} /> : null}
     </div>
   )
 }

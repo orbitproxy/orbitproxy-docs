@@ -2,69 +2,75 @@
 
 import { useState } from "react"
 
-import { PolicyTag, type PolicyScope } from "@/components/policy-tag"
-
-type Video = {
+export type DocsVideo = {
+  slug: string
   title: string
-  href: string
-  scope: PolicyScope
-  description?: string
+  summary: string
+  coverUrl: string
+  playUrl: string
+  category: { name: string; slug: string }
 }
 
-const FILTERS: { key: "all" | PolicyScope; label: string }[] = [
-  { key: "all", label: "全部" },
-  { key: "api", label: "API网关" },
-  { key: "mcp", label: "MCP网关" },
-]
+export type DocsVideoCategory = {
+  name: string
+  slug: string
+}
 
-/**
- * 官方视频列表。与 orbitproxy-console 安装指引保持一致：卡片只展示标题和 bilibili 外链，
- * 不嵌入播放器，也不带封面和预览。通用视频在每个分类下都会出现。
- */
-export function VideoGallery({ videos }: { videos: Video[] }) {
-  const [active, setActive] = useState<"all" | PolicyScope>("all")
-  const visible = videos.filter(
-    (video) => active === "all" || video.scope === "common" || video.scope === active,
-  )
+export function VideoGallery({
+  videos,
+  categories,
+}: {
+  videos: DocsVideo[]
+  categories: DocsVideoCategory[]
+}) {
+  const [active, setActive] = useState("all")
+  const visible = videos.filter((video) => active === "all" || video.category.slug === active)
+  const filters = [{ slug: "all", name: "全部" }, ...categories]
 
   return (
     <div className="video-gallery">
       <div className="video-filters" role="tablist" aria-label="视频分类">
-        {FILTERS.map((filter) => (
+        {filters.map((filter) => (
           <button
-            key={filter.key}
+            key={filter.slug}
             type="button"
             role="tab"
-            aria-selected={active === filter.key}
+            aria-selected={active === filter.slug}
+            data-active={active === filter.slug}
             className="video-filter"
-            data-active={active === filter.key}
-            onClick={() => setActive(filter.key)}
+            onClick={() => setActive(filter.slug)}
           >
-            {filter.label}
+            {filter.name}
           </button>
         ))}
       </div>
-      <div className="video-grid">
-        {visible.map((video) => (
-          <a
-            key={video.href}
-            className="video-card"
-            href={video.href}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <PolicyTag scope={video.scope} inline />
-            <span className="video-card-title">{video.title}</span>
-            {video.description ? (
-              <span className="video-card-desc">{video.description}</span>
-            ) : null}
-            <span className="video-card-source">
-              <img src="/install/bilibili.png" alt="" width={20} height={20} />
-              前往bilibili观看官方教程
-            </span>
-          </a>
-        ))}
-      </div>
+      {visible.length === 0 ? (
+        <p className="docs-release-empty">还没有已发布的视频。</p>
+      ) : (
+        <div className="video-row">
+          {visible.map((video) => (
+            <div key={video.slug} className="video-col">
+              <a className="video-card" href={video.playUrl} target="_blank" rel="noopener noreferrer">
+                <img className="video-card-img" src={video.coverUrl} alt="" />
+                <div className="video-card-content">
+                  <h4 className="video-card-title">
+                    <span className={`video-card-tag ${categoryTone(video.category)}`}>{video.category.name}</span>
+                    {video.title}
+                  </h4>
+                  <p className="video-card-desc">{video.summary}</p>
+                </div>
+              </a>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   )
+}
+
+function categoryTone(category: { name: string; slug: string }) {
+  const key = `${category.slug} ${category.name}`.toLowerCase()
+  if (key.includes("mcp")) return "bg-purple-500/20 text-purple-700"
+  if (key.includes("api")) return "bg-green-500/20 text-green-700"
+  return "bg-blue-500/20 text-blue-700"
 }

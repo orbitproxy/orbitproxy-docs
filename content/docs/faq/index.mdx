@@ -50,7 +50,7 @@ orbitproxy 客户端会持续保持出站连接、可以启动你配置的 Stdio
 
 ## 本机服务可以接收微信支付、支付宝的回调吗？
 
-可以。微信支付和支付宝只会向公网 HTTPS URL 投递回调。把 Webhook 云端点指向本机服务的端口，就可以在本机接收、查看和重放回调，并在网关校验签名后再转发到本机服务。详见 [Webhook 网关](/docs/gateway/webhook)和 [Webhook 验证](/docs/policy/webhook-verify)。
+可以。把一条 HTTPS 分享指到本机服务的端口，微信支付和支付宝就能把回调打到这台机器。需要在网关验签时，使用 [Webhook 验证](/docs/policy/webhook-verify)。在本机接收回调的做法见 [localhost/内网服务接收微信支付等第三方 webhook回调](/docs/gateway/use-cases/wechat-webhook)。
 
 ## 如何为云端点添加 CORS 响应头？
 

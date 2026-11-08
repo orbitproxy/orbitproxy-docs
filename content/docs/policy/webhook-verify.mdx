@@ -66,4 +66,4 @@ Webhook 验证策略在回调请求到达网关时，按所选的 webhook 身份
 
 身份源中的路径口令为 `<pathToken>`，回调路径为 `/api/webhook/ihuyi/<pathToken>`。在互亿无线的数据接收地址中填写 `https://<云端点域名>/api/webhook/ihuyi/<pathToken>`。路径不以该口令结尾的请求在网关终止。
 
-验签和回调重放的背景，见 [Webhook 网关](/docs/gateway/webhook)。
+在本机接收这类回调的做法，见 [localhost/内网服务接收微信支付等第三方 webhook回调](/docs/gateway/use-cases/wechat-webhook)。

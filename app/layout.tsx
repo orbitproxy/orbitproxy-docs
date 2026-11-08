@@ -28,6 +28,13 @@ const geistMono = localFont({
   weight: "100 900",
 })
 
+const jetbrainsMono = localFont({
+  src: "../public/fonts/JetBrainsMono-Regular.ttf",
+  variable: "--font-jetbrains-mono",
+  display: "swap",
+  weight: "400",
+})
+
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
@@ -65,7 +72,7 @@ export default function Layout({ children }: { children: ReactNode }) {
   return (
     <html
       lang="zh-CN"
-      className={`${geist.variable} ${geistMono.variable}`}
+      className={`${geist.variable} ${geistMono.variable} ${jetbrainsMono.variable} ${geist.className}`}
       suppressHydrationWarning
     >
       <body>

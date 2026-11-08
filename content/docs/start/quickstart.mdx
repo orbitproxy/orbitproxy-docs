@@ -8,10 +8,10 @@ description: 本快速入门交给 AI Agent 执行。当前环境没有可用的
 将下面的提示词交给 AI Agent。它会先确认是否已有需要发布的内网服务：有则使用你提供的地址和端口；没有则说明将临时发布一个本机页面，用来确认公网地址可用。
 
 ```text
-阅读 https://docs.orbitproxy.cc/agent-setup/prompt.md 并按其执行，
-把我的服务通过 orbitproxy 发布到公网。
+先阅读 https://docs.orbitproxy.cc/agent-setup/prepare.md 并按其执行。
+环境已经就绪后，不要重复安装。然后把我的服务通过 orbitproxy 发布到公网，做法见 https://docs.orbitproxy.cc/agent-setup/tasks/publish.md
 ```
 
 已经知道要发布的服务时，可以在同一条消息中写明，例如「发布本机 127.0.0.1:3000 上的 HTTP 服务」。
 
-完成后，在浏览器中打开 Agent 给出的公网地址。说明全文见 [prompt.md](https://docs.orbitproxy.cc/agent-setup/prompt.md)。
+完成后，在浏览器中打开 Agent 给出的公网地址。环境准备见 [prepare.md](https://docs.orbitproxy.cc/agent-setup/prepare.md)，发布步骤见 [publish.md](https://docs.orbitproxy.cc/agent-setup/tasks/publish.md)。
